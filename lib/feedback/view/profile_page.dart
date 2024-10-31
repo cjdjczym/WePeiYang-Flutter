@@ -289,23 +289,23 @@ class _ProfilePageState extends State<ProfilePage> {
                           Navigator.pushNamed(context, FeedbackRouter.mailbox);
                         },
                       ),
-                      SizedBox(width: 10.w),
-                      CustomCard(
-                        image: 'assets/images/mylike.png',
-                        text: '我的点赞',
-                        onPressed: () {
-                          Navigator.pushNamed(context, FeedbackRouter.mailbox);
-                        },
-                      ),
-                      // TODO: 等后端修好再打开
                       // SizedBox(width: 10.w),
                       // CustomCard(
-                      //   image: 'assets/images/history.png',
-                      //   text: '历史浏览',
+                      //   image: 'assets/images/mylike.png',
+                      //   text: '我的点赞',
                       //   onPressed: () {
-                      //     Navigator.pushNamed(context, FeedbackRouter.history);
+                      //     Navigator.pushNamed(context, FeedbackRouter.mailbox);
                       //   },
                       // ),
+                      // TODO: 等后端修好再打开
+                      SizedBox(width: 10.w),
+                      CustomCard(
+                        image: 'assets/images/history.png',
+                        text: '历史浏览',
+                        onPressed: () {
+                          Navigator.pushNamed(context, FeedbackRouter.history);
+                        },
+                      ),
                       SizedBox(
                         width: 10.w,
                       ),
