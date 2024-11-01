@@ -144,7 +144,6 @@ class _NewPostPageState extends State<NewPostPage> {
         onPressed: () => Navigator.of(context).pop(),
       ),
       backgroundColor: Colors.transparent,
-      systemOverlayStyle: SystemUiOverlayStyle.dark,
     );
 
     final submitButton = Hero(

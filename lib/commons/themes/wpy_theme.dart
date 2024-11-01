@@ -54,6 +54,8 @@ class WpyTheme extends InheritedWidget {
     return themeData.data.getColorSet(key) as Gradient;
   }
 
+  get isDarkTheme => themeData.meta.brightness == Brightness.dark;
+
   Brightness get brightness => themeData.meta.brightness;
 
   static void init() {
@@ -66,7 +68,7 @@ class WpyTheme extends InheritedWidget {
     globalTheme.value = theme;
   }
 
-  static Future<void> updateAutoDarkTheme(BuildContext context) async{
+  static Future<void> updateAutoDarkTheme(BuildContext context) async {
     if (!CommonPreferences.autoDarkTheme.value) return;
 
     // 检查要移动到什么主题

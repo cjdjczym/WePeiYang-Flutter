@@ -53,7 +53,6 @@ class InnerSinglePostPic extends StatelessWidget {
               future: completer.future.timeout(Duration(seconds: 3)),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  print("==> image load error!!");
                   return _buildErrorHint(layout.maxWidth);
                 }
                 // 处理加载状态
@@ -67,9 +66,12 @@ class InnerSinglePostPic extends StatelessWidget {
 
                 // 根据是否为长图和展开状态渲染不同的UI
                 if (isLongImage) {
-                  return isExpanded
-                      ? _buildExpandedImageView(context, image)
-                      : _buildCollapsedImageView(context, image);
+                  return AnimatedSize(
+                    duration: Duration(milliseconds: 250),
+                    child: isExpanded
+                        ? _buildExpandedImageView(context, image)
+                        : _buildCollapsedImageView(context, image),
+                  );
                 } else {
                   return _buildRegularImageView(context, image);
                 }
@@ -207,13 +209,12 @@ class InnerSinglePostPic extends StatelessWidget {
 
   Widget _buildErrorHint(double maxWidth) {
     return ClipRRect(
-      borderRadius: BorderRadius.all(Radius.circular(radius)),
-      child: SizedBox(
-        width:maxWidth,
-        height: maxWidth / 3,
-        child: WpyPic.errorPlaceHolder,
-      )
-    );
+        borderRadius: BorderRadius.all(Radius.circular(radius)),
+        child: SizedBox(
+          width: maxWidth,
+          height: maxWidth / 3,
+          child: WpyPic.errorPlaceHolder,
+        ));
   }
 }
 

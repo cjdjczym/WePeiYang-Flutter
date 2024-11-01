@@ -449,34 +449,36 @@ class _ReplyDetailPageState extends State<ReplyDetailPage>
         ),
       ),
       elevation: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.dark,
     );
 
-    return PopScope(
-      onPopInvoked: (didPop) {
-        if (didPop) return;
-        context.read<NewFloorProvider>().clearAndClose();
-        Navigator.pop(context);
-      },
-      canPop: true,
-      // onWillPop: () async {
-      //   context.read<NewFloorProvider>().clearAndClose();
-      //   Navigator.pop(context);
-      //   return true;
-      // },
-      child: GestureDetector(
-        child: Scaffold(
-            appBar: appBar,
-            body: AnimatedSwitcher(
-              duration: Duration(milliseconds: 500),
-              child: body,
-            )),
-        onHorizontalDragUpdate: (DragUpdateDetails details) {
-          if (details.delta.dx > 20) {
-            context.read<NewFloorProvider>().clearAndClose();
-            Navigator.pop(context);
-          }
+    return SafeArea(
+      top: false,
+      child: PopScope(
+        onPopInvoked: (didPop) {
+          if (didPop) return;
+          context.read<NewFloorProvider>().clearAndClose();
+          Navigator.pop(context);
         },
+        canPop: true,
+        // onWillPop: () async {
+        //   context.read<NewFloorProvider>().clearAndClose();
+        //   Navigator.pop(context);
+        //   return true;
+        // },
+        child: GestureDetector(
+          child: Scaffold(
+              appBar: appBar,
+              body: AnimatedSwitcher(
+                duration: Duration(milliseconds: 500),
+                child: body,
+              )),
+          onHorizontalDragUpdate: (DragUpdateDetails details) {
+            if (details.delta.dx > 20) {
+              context.read<NewFloorProvider>().clearAndClose();
+              Navigator.pop(context);
+            }
+          },
+        ),
       ),
     );
   }

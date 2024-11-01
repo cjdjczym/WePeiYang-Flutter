@@ -348,19 +348,22 @@ class _ProfileImageWithDetailedPopupState
                           int random = widget.uid % colorList.length;
                           return colorList[random];
                         }(),
-                        child: Text(
-                          () {
-                            String shortName = widget.nickName
-                                .replaceAll(RegExp(r'[\d\*\s]'), '')
-                                .replaceAll(RegExp(r'[^\u4e00-\u9fa5]'), '');
+                        child: Center(
+                          child: Text(
+                            () {
+                              String shortName = widget.nickName
+                                  .replaceAll(RegExp(r'[\d\*\s]'), '')
+                                  .replaceAll(RegExp(r'[^\u4e00-\u9fa5]'), '');
 
-                            return shortName.isNotEmpty
-                                ? shortName.substring(0, 1)
-                                : widget.nickName.substring(0, 1);
-                          }(),
-                          style: TextUtil.base.NotoSansSC.w400
-                              .sp(16)
-                              .bright(context),
+                              return shortName.isNotEmpty
+                                  ? shortName.substring(0, 1)
+                                  : widget.nickName.substring(0, 1);
+                            }(),
+                            style: TextUtil.base.NotoSansSC.w400
+                                .sp(16)
+                                .bright(context)
+                                .copyWith(height: 0.8),
+                          ),
                         ),
                       )
                     : WpyPic(
