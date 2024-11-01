@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:we_pei_yang_flutter/commons/environment/config.dart';
 import 'package:we_pei_yang_flutter/commons/util/router_manager.dart';
 import 'package:we_pei_yang_flutter/commons/util/text_util.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/loading.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/wpy_pic.dart';
-import 'package:we_pei_yang_flutter/feedback/util/splitscreen_util.dart';
 import 'package:we_pei_yang_flutter/feedback/view/person_page.dart';
 import 'package:we_pei_yang_flutter/feedback/view/search_result_page.dart';
 
@@ -311,7 +309,6 @@ class ProfileImageWithDetailedPopup extends StatefulWidget {
 
 class _ProfileImageWithDetailedPopupState
     extends State<ProfileImageWithDetailedPopup> {
-
   bool get hasAdmin =>
       CommonPreferences.isSchAdmin.value ||
       CommonPreferences.isStuAdmin.value ||
@@ -335,50 +332,65 @@ class _ProfileImageWithDetailedPopupState
       },
       child: Hero(
         tag: widget.heroTag,
-        child: SizedBox(
-          width: SplitUtil.w * 32 > SplitUtil.h * 56
-              ? SplitUtil.w * 32
-              : SplitUtil.h * 56,
-          height: SplitUtil.w * 32 > SplitUtil.h * 56
-              ? SplitUtil.w * 32
-              : SplitUtil.h * 56,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(18)),
+              child: SizedBox(
+                height: 32,
+                width: 32,
+                child: (widget.type == 1 || widget.avatar == '')
+                    ? CircleAvatar(
+                        backgroundColor: () {
+                          final colorList = WpyTheme.of(context)
+                              .getColorSet(WpyColorSetKey.levelColors);
+                          int random = widget.uid % colorList.length;
+                          return colorList[random];
+                        }(),
+                        child: Text(
+                          () {
+                            String shortName = widget.nickName
+                                .replaceAll(RegExp(r'[\d\*\s]'), '')
+                                .replaceAll(RegExp(r'[^\u4e00-\u9fa5]'), '');
+
+                            return shortName.isNotEmpty
+                                ? shortName.substring(0, 1)
+                                : widget.nickName.substring(0, 1);
+                          }(),
+                          style: TextUtil.base.NotoSansSC.w400
+                              .sp(16)
+                              .bright(context),
+                        ),
+                      )
+                    : WpyPic(
+                        width: 32,
+                        height: 32,
+                        'https://qnhdpic.twt.edu.cn/download/origin/${widget.avatar}',
+                        fit: BoxFit.cover,
+                      ),
+              ),
+            ),
+            if (widget.avatarBox != '' &&
+                widget.avatarBox != 'Error' &&
+                widget.type != 1 &&
+                widget.avatarBox.length > 5)
               SizedBox(
-                child: ClipRRect(
-                  borderRadius:
-                      BorderRadius.all(Radius.circular(SplitUtil.w * 18)),
+                width: 32,
+                height: 32,
+                child: OverflowBox(
+                  maxWidth: 60,
+                  maxHeight: 60,
                   child: WpyPic(
-                    (widget.avatar == "" || widget.type == 1)
-                        ? '${EnvConfig.QNHD}avatar/beam/20/${widget.uid}.svg'
-                        : 'https://qnhdpic.twt.edu.cn/download/origin/${widget.avatar}',
-                    width: SplitUtil.w * 17 > SplitUtil.h * 32
-                        ? SplitUtil.w * 17
-                        : SplitUtil.h * 32,
-                    height: SplitUtil.w * 17 > SplitUtil.h * 32
-                        ? SplitUtil.w * 17
-                        : SplitUtil.h * 32,
-                    fit: BoxFit.cover,
+                    width: 60,
+                    height: 60,
+                    widget.avatarBox,
+                    fit: BoxFit.contain,
+                    reduce: false,
                   ),
                 ),
               ),
-              if (widget.avatarBox != '' &&
-                  widget.avatarBox != 'Error' &&
-                  widget.avatarBox.length > 5)
-                WpyPic(
-                  widget.avatarBox,
-                  width: SplitUtil.w * 32 > SplitUtil.h * 56
-                      ? SplitUtil.w * 32
-                      : SplitUtil.h * 56,
-                  height: SplitUtil.w * 32 > SplitUtil.h * 56
-                      ? SplitUtil.w * 32
-                      : SplitUtil.h * 56,
-                  fit: BoxFit.contain,
-                  reduce: false,
-                ),
-            ],
-          ),
+          ],
         ),
       ),
     );

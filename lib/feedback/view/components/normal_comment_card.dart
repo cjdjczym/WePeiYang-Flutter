@@ -275,8 +275,7 @@ class _NCommentCardState extends State<NCommentCard>
                                 FeedbackService.deleteFloor(
                                   id: widget.comment.id,
                                   onSuccess: () {
-                                    ToastProvider.success(
-                                        '删除成功');
+                                    ToastProvider.success('删除成功');
                                     setState(() {
                                       _isDeleted = true;
                                     });
@@ -319,8 +318,7 @@ class _NCommentCardState extends State<NCommentCard>
                             FeedbackService.adminDeleteReply(
                               floorId: widget.comment.id,
                               onSuccess: () {
-                                ToastProvider.success(
-                                    '删除成功');
+                                ToastProvider.success('删除成功');
                                 setState(() {
                                   _isDeleted = true;
                                 });
@@ -695,16 +693,19 @@ class _NCommentCardState extends State<NCommentCard>
         ...likeAndDislikeWidget,
         Spacer(),
         Text(
-          DateTime.now().difference(widget.comment.createAt!).inHours >= 11
-              ? widget.comment.createAt!
-                  .toLocal()
-                  .toIso8601String()
-                  .replaceRange(10, 11, ' ')
-                  .replaceAllMapped('-', (_) => '/')
-                  .substring(2, 19)
-              : DateTime.now()
-                  .difference(widget.comment.createAt!)
-                  .dayHourMinuteSecondFormatted(),
+          () {
+            final createdAt = widget.comment.createAt!;
+            final timeDifference = DateTime.now().difference(createdAt);
+
+            return timeDifference.inHours >= 11
+                ? createdAt
+                    .toLocal()
+                    .toIso8601String()
+                    .replaceRange(10, 11, ' ')
+                    .replaceAll('-', '/')
+                    .substring(2, 19)
+                : timeDifference.dayHourMinuteSecondFormatted();
+          }(),
           style: TextUtil.base.ProductSans
               .secondaryInfo(context)
               .regular
@@ -725,14 +726,14 @@ class _NCommentCardState extends State<NCommentCard>
           widget.comment.level.toString(),
           widget.comment.id.toString(),
           widget.comment.avatarBox.toString()),
+      SizedBox(width: 8),
       Expanded(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: SplitUtil.h * 9),
             topWidget,
-            SizedBox(height: SplitUtil.h * 4),
+            SizedBox(height: 4),
             commentContent,
             if (widget.comment.imageUrl != '') commentImage,
             if (_picFullView == true && widget.comment.imageUrl != '')
@@ -763,63 +764,55 @@ class _NCommentCardState extends State<NCommentCard>
           ],
         ),
       ),
-      SizedBox(width: SplitUtil.w * 16)
     ]);
 
     return _isDeleted
         ? SizedBox(height: 1)
-        : Stack(
+        : Column(
             children: [
-              Column(
-                children: [
-                  Container(
-                    padding: EdgeInsets.fromLTRB(0, 0, 0, SplitUtil.h * 6),
-                    color: Colors.transparent,
-                    child: mainBody,
-                  ),
-                  if (!widget.isSubFloor &&
-                      !widget.isFullView &&
-                      subFloor != null)
-                    Padding(
-                        padding: EdgeInsets.only(left: 44.w),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            subFloor,
-                            if (widget.comment.subFloorCnt > 0)
-                              InkWell(
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    FeedbackRouter.commentDetail,
-                                    arguments: ReplyDetailPageArgs(
-                                        widget.comment, widget.uid),
-                                  );
-                                },
-                                child: Row(
-                                  children: [
-                                    SizedBox(width: 58.w),
-                                    // 这里的 padding 是用于让查看全部几条回复的部分与点赞图标对齐
-                                    Text(
-                                        widget.comment.subFloorCnt > 2
-                                            ? '查看全部 ' +
-                                                widget.comment.subFloorCnt
-                                                    .toString() +
-                                                ' 条回复 >'
-                                            : '查看回复详情 >',
-                                        style: TextUtil.base.NotoSansSC.w400
-                                            .sp(12)
-                                            .primaryAction(context)),
-                                    Spacer()
-                                  ],
-                                ),
-                              ),
-                            SizedBox(height: SplitUtil.h * 12)
-                          ],
-                        )),
-                ],
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                color: Colors.transparent,
+                child: mainBody,
               ),
-              // Positioned(right: 8.w, child: commentMenuButton)
+              if (!widget.isSubFloor && !widget.isFullView && subFloor != null)
+                Padding(
+                    padding: EdgeInsets.only(left: 44.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        subFloor,
+                        if (widget.comment.subFloorCnt > 0)
+                          InkWell(
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                FeedbackRouter.commentDetail,
+                                arguments: ReplyDetailPageArgs(
+                                    widget.comment, widget.uid),
+                              );
+                            },
+                            child: Row(
+                              children: [
+                                SizedBox(width: 58.w),
+                                // 这里的 padding 是用于让查看全部几条回复的部分与点赞图标对齐
+                                Text(
+                                    widget.comment.subFloorCnt > 2
+                                        ? '查看全部 ' +
+                                            widget.comment.subFloorCnt
+                                                .toString() +
+                                            ' 条回复 >'
+                                        : '查看回复详情 >',
+                                    style: TextUtil.base.NotoSansSC.w400
+                                        .sp(12)
+                                        .primaryAction(context)),
+                                Spacer()
+                              ],
+                            ),
+                          ),
+                        SizedBox(height: SplitUtil.h * 12)
+                      ],
+                    )),
             ],
           );
   }

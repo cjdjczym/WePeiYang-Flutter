@@ -14,3 +14,5 @@ class SplitUtil {
   static late double sh = 1.sh;
   static late double toolbarWidth = Platform.isWindows ? needHorizontalView ? 25 : 50 : 0;
 }
+
+

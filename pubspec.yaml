@@ -35,7 +35,7 @@ dependencies:
   badges: ^3.1.1
 
   connectivity_plus: ^5.0.2
-  cached_network_image: ^3.3.1
+  cached_network_image: ^3.4.0
   card_swiper: ^3.0.1
 
   dio: ^5.4.1
@@ -46,6 +46,7 @@ dependencies:
   extended_tabs: ^4.1.0
   extended_image: any
 
+  shimmer: ^3.0.0
   flutter_displaymode: ^0.6.0
   flutter_html:
     git:
@@ -97,6 +98,7 @@ dependencies:
   simple_url_preview_v2:
     git:
       url: https://github.com/steven12138/flutter-simple-url-preview_deps.git
+      ref: 0a388031be88ea7f89dbc869d89a78ae013a0ca6
   flutter_link_previewer: ^3.2.2
 
   table_calendar: ^3.0.9

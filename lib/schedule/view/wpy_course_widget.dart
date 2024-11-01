@@ -19,7 +19,7 @@ class TodayCoursesWidget extends StatelessWidget {
       var nightMode =
           context.select<CourseDisplayProvider, bool>((p) => p.nightMode);
       var todayPairs = _getTodayPairs(provider, nightMode);
-      if (todayPairs.length == 0) return Container();
+      if (todayPairs.length == 0) return SizedBox.shrink();
 
       return _detail(context, todayPairs, nightMode);
     });
@@ -108,7 +108,8 @@ class TodayCoursesWidget extends StatelessWidget {
                           SizedBox(
                             width: 1.sw - 125.w - 50.r,
                             child: Text(
-                              (todayPairs[i].arrange.isExperiment&CommonPreferences.isShowExperiment.value)
+                              (todayPairs[i].arrange.isExperiment &
+                                      CommonPreferences.isShowExperiment.value)
                                   ? "[实验] ${todayPairs[i].arrange.name!}"
                                   : todayPairs[i].first.name,
                               style: TextUtil.base.PingFangSC

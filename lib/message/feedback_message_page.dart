@@ -89,7 +89,7 @@ class _FeedbackMessagePageState extends State<FeedbackMessagePage>
         case MessageType.reply:
           return ReplyMessagesList();
         default:
-          return Container();
+          return SizedBox.shrink();
       }
     }).toList();
     wd.add(LakeEmailPage(

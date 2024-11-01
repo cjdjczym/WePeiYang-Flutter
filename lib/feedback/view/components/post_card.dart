@@ -72,7 +72,6 @@ class _PostCardNormalState extends State<PostCardNormal> {
             ? SplitUtil.w * 32
             : SplitUtil.h * 56,
         child: Row(children: [
-          SizedBox(width: SplitUtil.w * 2),
           IgnorePointer(
             ignoring: !widget.avatarClickable,
             child: ProfileImageWithDetailedPopup(
@@ -86,6 +85,7 @@ class _PostCardNormalState extends State<PostCardNormal> {
                 post.id.toString(),
                 post.avatarBox.toString()),
           ),
+          SizedBox(width: 12),
           Expanded(
             child: Container(
                 color: Colors.transparent, // 没他就没有点击域
@@ -146,7 +146,6 @@ class _PostCardNormalState extends State<PostCardNormal> {
                 style: TextUtil.base.w400.infoText(context).NotoSansSC.sp(12),
               ),
             ),
-          SizedBox(width: SplitUtil.w * 16)
         ]));
 
     /// 标题eTag 指的是 活动 Pined 等等
@@ -164,27 +163,19 @@ class _PostCardNormalState extends State<PostCardNormal> {
     ]);
 
     /// 帖子内容
-    var content = Padding(
-        padding: EdgeInsets.only(top: SplitUtil.h * 6),
-        child: widget.outer
-            ? Text(post.content,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextUtil.base.NotoSansSC.w400
-                    .sp(14)
-                    .primary(context)
-                    .h(1.4))
-            : ExpandableText(
-                text: post.content,
-                maxLines: 8,
-                style: TextUtil.base.NotoSansSC.w400
-                    .sp(14)
-                    .primary(context)
-                    .h(1.6),
-                expand: widget.expandAll,
-                buttonIsShown: true,
-                isHTML: false,
-              ));
+    var content = widget.outer
+        ? Text(post.content,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextUtil.base.NotoSansSC.w400.sp(14).primary(context).h(1.4))
+        : ExpandableText(
+            text: post.content,
+            maxLines: 8,
+            style: TextUtil.base.NotoSansSC.w400.sp(14).primary(context).h(1.6),
+            expand: widget.expandAll,
+            buttonIsShown: true,
+            isHTML: false,
+          );
 
     /// 评论点赞点踩浏览量
     var likeUnlikeVisit = Row(
@@ -316,14 +307,8 @@ class _PostCardNormalState extends State<PostCardNormal> {
     // （因为 outer 和 inner 的这部分几乎完全相同）
     List<Widget> head = [
       avatarAndSolve,
-      Padding(
-        padding: EdgeInsets.symmetric(horizontal: SplitUtil.w * 16),
-        child: eTagAndTitle,
-      ),
-      if (post.content.isNotEmpty)
-        Padding(
-            padding: EdgeInsets.symmetric(horizontal: SplitUtil.w * 16),
-            child: content),
+      eTagAndTitle,
+      if (post.content.isNotEmpty) content,
       // 行数的区别在内部判断
       SizedBox(height: SplitUtil.h * 10)
     ];
@@ -353,7 +338,7 @@ class _PostCardNormalState extends State<PostCardNormal> {
                 }
               },
               child: Container(
-                padding: EdgeInsets.fromLTRB(0, 0, 0, SplitUtil.h * 8),
+                padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12.h),
                 color: WpyTheme.of(context)
                     .get(WpyColorKey.primaryBackgroundColor),
                 child: Column(
@@ -361,19 +346,19 @@ class _PostCardNormalState extends State<PostCardNormal> {
                   children: [
                     ...head,
                     //此处为图片
-                    Center(child: PostPreviewPic(imgUrls: post.imageUrls)),
-                    Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: SplitUtil.w * 16),
-                      child: likeUnlikeVisit,
-                    )
+                    Center(child: Padding(
+                      padding: const EdgeInsets.all(2),
+                      child: PostPreviewPic(imgUrls: post.imageUrls),
+                    )),
+                    SizedBox(height: 2),
+                    likeUnlikeVisit
                   ],
                 ),
               ),
             );
           } else {
             return Container(
-              padding: EdgeInsets.fromLTRB(0, 0, 0, SplitUtil.h * 8),
+              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
               decoration: BoxDecoration(
                   border: Border(
                       bottom: BorderSide(

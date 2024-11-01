@@ -1,11 +1,9 @@
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:we_pei_yang_flutter/commons/themes/template/wpy_theme_data.dart';
 import 'package:we_pei_yang_flutter/commons/themes/wpy_theme.dart';
-import 'package:we_pei_yang_flutter/commons/util/logger.dart';
 import 'package:we_pei_yang_flutter/commons/util/text_util.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/SpoilerMask.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/loading.dart';
@@ -38,6 +36,26 @@ class WpyPic extends StatefulWidget {
   final bool reduce;
 
   final bool hide;
+
+  static get errorPlaceHolder => Builder(builder: (context) {
+        return ColoredBox(
+          color: WpyTheme.of(context).get(WpyColorKey.secondaryBackgroundColor),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.broken_image_sharp,
+                color: WpyTheme.of(context).get(WpyColorKey.infoTextColor),
+              ),
+              SizedBox(height: 4),
+              Center(
+                child: Text('加载失败',
+                    style: TextUtil.base.infoText(context).w400.sp(12)),
+              ),
+            ],
+          ),
+        );
+      });
 
   @override
   _WpyPicState createState() => _WpyPicState();
@@ -102,9 +120,8 @@ class _WpyPicState extends State<WpyPic> {
             : null,
         errorWidget: widget.withHolder
             ? (context, exception, stacktrace) {
-                Logger.reportError(exception, stacktrace as StackTrace);
-                return Text('💔[图片加载失败]',
-                    style: TextUtil.base.infoText(context).w400.sp(12));
+                // Logger.reportError(exception, stacktrace);
+                return WpyPic.errorPlaceHolder;
               }
             : null,
       );

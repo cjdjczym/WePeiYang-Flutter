@@ -11,15 +11,11 @@ class SpoilerMaskImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
-      print(constraints);
-      return Stack(children: [
-        child,
-        SizedBox(
-          width: constraints.maxWidth,
-          height: constraints.maxHeight,
-          child: SpoilerMask(),
-        )
-      ]);
+      return SizedBox(
+        width: constraints.maxWidth,
+        height: constraints.maxHeight,
+        child: Stack(children: [child, SpoilerMask()]),
+      );
     });
   }
 }

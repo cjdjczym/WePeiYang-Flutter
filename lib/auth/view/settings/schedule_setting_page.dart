@@ -12,21 +12,13 @@ class ScheduleSettingPage extends StatefulWidget {
 }
 
 class _ScheduleSettingPageState extends State<ScheduleSettingPage> {
-  final upNumberList = [
-    "5${'天'}",
-    "6${'天'}",
-    "7${'天'}"
-  ];
-  final downNumberList = [
-    '周一至周五',
-    '周一至周六',
-    '周一至周日'
-  ];
+  final upNumberList = ["5${'天'}", "6${'天'}", "7${'天'}"];
+  final downNumberList = ['周一至周五', '周一至周六', '周一至周日'];
   int _index = CommonPreferences.dayNumber.value - 5;
 
   Widget _judgeIndex(int index) {
     if (index != _index)
-      return Container();
+      return SizedBox.shrink();
     else
       return Padding(
         padding: const EdgeInsets.only(right: 22),

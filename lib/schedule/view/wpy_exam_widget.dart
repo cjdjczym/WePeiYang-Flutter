@@ -34,7 +34,7 @@ class WpyExamWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ExamProvider>(
       builder: (context, provider, child) {
-        if (provider.hideExam) return Container();
+        if (provider.hideExam) return SizedBox.shrink();
         return _detail(provider, context);
       },
     );
@@ -87,7 +87,6 @@ class WpyExamWidget extends StatelessWidget {
 
 class _BuildingItem extends StatelessWidget {
   const _BuildingItem({
-    super.key,
     required this.exam,
     required this.seat,
   });

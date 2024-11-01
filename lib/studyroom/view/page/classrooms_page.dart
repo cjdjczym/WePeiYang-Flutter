@@ -164,7 +164,7 @@ class FloorWidget extends StatelessWidget {
                     child: _RoomItem(rooms[i + j], areaName),
                   )
                 else
-                  Container(), // or any other placeholder if needed
+                  SizedBox.shrink(), // or any other placeholder if needed
             ],
           ),
       ],

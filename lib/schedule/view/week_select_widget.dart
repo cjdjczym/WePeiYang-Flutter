@@ -82,7 +82,7 @@ class WeekSelectWidget extends StatelessWidget {
           return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             height: shrink ? 0 : 90.h,
-            child: shrink ? Container() : listView,
+            child: shrink ? SizedBox.shrink() : listView,
           );
         },
       ),

@@ -20,25 +20,22 @@ class OuterSinglePostPic extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, layout) {
-      return Padding(
-        padding: EdgeInsets.all(radius),
-        child: ClipRRect(
-            borderRadius: BorderRadius.all(Radius.circular(radius)),
-            child: Container(
-              width: SplitUtil.sw - SplitUtil.w * 20 - SplitUtil.toolbarWidth,
-              height: SplitUtil.w * 150,
-              color:
-                  WpyTheme.of(context).get(WpyColorKey.iconAnimationStartColor),
-              //追踪首页帖子单图
-              child: WpyPic(
-                picBaseUrl + 'origin/' + imgUrl,
-                width: 350.w,
-                height: 197.w,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-              ),
-            )),
-      );
+      return ClipRRect(
+          borderRadius: BorderRadius.all(Radius.circular(radius)),
+          child: Container(
+            width: SplitUtil.sw - SplitUtil.w * 20 - SplitUtil.toolbarWidth,
+            height: SplitUtil.w * 150,
+            color:
+                WpyTheme.of(context).get(WpyColorKey.iconAnimationStartColor),
+            //追踪首页帖子单图
+            child: WpyPic(
+              picBaseUrl + 'origin/' + imgUrl,
+              fit: BoxFit.cover,
+              withHolder: true,
+              withCache: true,
+              alignment: Alignment.topCenter,
+            ),
+          ));
     });
   }
 }
@@ -87,6 +84,7 @@ class OuterMultiPostPic extends StatelessWidget {
                     width: layout.maxWidth / imgUrls.length - padding * 2,
                     height: layout.maxWidth / imgUrls.length - padding * 2,
                     withHolder: true,
+                    withCache: true,
                   ),
                 ),
               ),
@@ -108,7 +106,7 @@ class PostPreviewPic extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (imgUrls.length == 0) {
-      return Container();
+      return SizedBox.shrink();
     } else if (imgUrls.length == 1) {
       return OuterSinglePostPic(imgUrl: imgUrls[0]);
     } else {
