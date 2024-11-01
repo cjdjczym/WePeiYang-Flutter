@@ -370,10 +370,8 @@ class _PostCardNormalState extends State<PostCardNormal> {
                 children: [
                   ...head,
                   PostDetailPic(imgUrls: post.imageUrls),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: SplitUtil.w * 16),
-                    child: tagCampusVisit,
-                  ),
+                  SizedBox(height: 4),
+                  tagCampusVisit,
                 ],
               ),
             );

@@ -203,8 +203,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         borderRadius: BorderRadius.only(
             topLeft: Radius.circular(18.0), topRight: Radius.circular(18.0)),
       ),
-
-      /// 适配iOS底部安全区
       child: SafeArea(
         child: Row(children: <Widget>[homePage, feedbackPage, selfPage]),
       ),

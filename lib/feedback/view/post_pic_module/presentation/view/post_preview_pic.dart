@@ -6,7 +6,6 @@ import '../../../../../commons/environment/config.dart';
 import '../../../../../commons/themes/template/wpy_theme_data.dart';
 import '../../../../../commons/themes/wpy_theme.dart';
 import '../../../../../commons/widgets/wpy_pic.dart';
-import '../../../../util/splitscreen_util.dart';
 
 final String picBaseUrl = '${EnvConfig.QNHDPIC}download/';
 final radius = 4.r;
@@ -23,8 +22,8 @@ class OuterSinglePostPic extends StatelessWidget {
       return ClipRRect(
           borderRadius: BorderRadius.all(Radius.circular(radius)),
           child: Container(
-            width: SplitUtil.sw - SplitUtil.w * 20 - SplitUtil.toolbarWidth,
-            height: SplitUtil.w * 150,
+            width: layout.maxWidth,
+            height: 150,
             color:
                 WpyTheme.of(context).get(WpyColorKey.iconAnimationStartColor),
             //追踪首页帖子单图
@@ -33,6 +32,7 @@ class OuterSinglePostPic extends StatelessWidget {
               fit: BoxFit.cover,
               withHolder: true,
               withCache: true,
+              width: layout.maxWidth,
               alignment: Alignment.topCenter,
             ),
           ));
@@ -78,13 +78,16 @@ class OuterMultiPostPic extends StatelessWidget {
                           imgUrls, imgUrls.length, index, false),
                     );
                   },
-                  child: WpyPic(
-                    picBaseUrl + 'thumb/' + imgUrls[index],
-                    fit: BoxFit.cover,
+                  child: SizedBox(
                     width: layout.maxWidth / imgUrls.length - padding * 2,
                     height: layout.maxWidth / imgUrls.length - padding * 2,
-                    withHolder: true,
-                    withCache: true,
+                    child: WpyPic(
+                      picBaseUrl + 'thumb/' + imgUrls[index],
+                      width: layout.maxWidth / imgUrls.length - padding * 2,
+                      fit: BoxFit.cover,
+                      withHolder: true,
+                      withCache: true,
+                    ),
                   ),
                 ),
               ),

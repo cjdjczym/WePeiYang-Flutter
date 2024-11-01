@@ -489,8 +489,6 @@ class _LikeMessageItemState extends State<LikeMessageItem> {
     });
   }
 
-  static WidgetBuilder defaultPlaceholderBuilder =
-      (BuildContext ctx) => Loading();
 
   @override
   Widget build(BuildContext context) {
@@ -498,14 +496,11 @@ class _LikeMessageItemState extends State<LikeMessageItem> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.all(Radius.circular(100)),
-          child: SvgPicture.network(
-            '${EnvConfig.QNHD}avatar/beam/20/${widget.data.floor.nickname}',
-            width: 30,
-            height: 30,
-            fit: BoxFit.cover,
-            placeholderBuilder: defaultPlaceholderBuilder,
+        CircleAvatar(
+          radius: 18,
+          child: Icon(
+            Icons.supervisor_account_sharp,
+            color: WpyTheme.of(context).get(WpyColorKey.labelTextColor),
           ),
         ),
         SizedBox(width: 6.w),

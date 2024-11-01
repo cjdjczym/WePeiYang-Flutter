@@ -330,71 +330,68 @@ class _ProfileImageWithDetailedPopupState
                   widget.level,
                   widget.heroTag));
       },
-      child: Hero(
-        tag: widget.heroTag,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(18)),
-              child: SizedBox(
-                height: 32,
-                width: 32,
-                child: (widget.type == 1 || widget.avatar == '')
-                    ? CircleAvatar(
-                        backgroundColor: () {
-                          final colorList = WpyTheme.of(context)
-                              .getColorSet(WpyColorSetKey.levelColors);
-                          int random = widget.uid % colorList.length;
-                          return colorList[random];
-                        }(),
-                        child: Center(
-                          child: Text(
-                            () {
-                              String shortName = widget.nickName
-                                  .replaceAll(RegExp(r'[\d\*\s]'), '')
-                                  .replaceAll(RegExp(r'[^\u4e00-\u9fa5]'), '');
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.all(Radius.circular(18)),
+            child: SizedBox(
+              height: 32,
+              width: 32,
+              child: (widget.type == 1 || widget.avatar == '')
+                  ? CircleAvatar(
+                      backgroundColor: () {
+                        final colorList = WpyTheme.of(context)
+                            .getColorSet(WpyColorSetKey.levelColors);
+                        int random = widget.uid % colorList.length;
+                        return colorList[random];
+                      }(),
+                      child: Center(
+                        child: Text(
+                          () {
+                            String shortName = widget.nickName
+                                .replaceAll(RegExp(r'[\d\*\s]'), '')
+                                .replaceAll(RegExp(r'[^\u4e00-\u9fa5]'), '');
 
-                              return shortName.isNotEmpty
-                                  ? shortName.substring(0, 1)
-                                  : widget.nickName.substring(0, 1);
-                            }(),
-                            style: TextUtil.base.NotoSansSC.w400
-                                .sp(16)
-                                .bright(context)
-                                .copyWith(height: 0.8),
-                          ),
+                            return shortName.isNotEmpty
+                                ? shortName.substring(0, 1)
+                                : widget.nickName.substring(0, 1);
+                          }(),
+                          style: TextUtil.base.NotoSansSC.w400
+                              .sp(16)
+                              .bright(context)
+                              .copyWith(height: 0.8),
                         ),
-                      )
-                    : WpyPic(
-                        width: 32,
-                        height: 32,
-                        'https://qnhdpic.twt.edu.cn/download/origin/${widget.avatar}',
-                        fit: BoxFit.cover,
                       ),
-              ),
+                    )
+                  : WpyPic(
+                      width: 32,
+                      height: 32,
+                      'https://qnhdpic.twt.edu.cn/download/origin/${widget.avatar}',
+                      fit: BoxFit.cover,
+                    ),
             ),
-            if (widget.avatarBox != '' &&
-                widget.avatarBox != 'Error' &&
-                widget.type != 1 &&
-                widget.avatarBox.length > 5)
-              SizedBox(
-                width: 32,
-                height: 32,
-                child: OverflowBox(
-                  maxWidth: 60,
-                  maxHeight: 60,
-                  child: WpyPic(
-                    width: 60,
-                    height: 60,
-                    widget.avatarBox,
-                    fit: BoxFit.contain,
-                    reduce: false,
-                  ),
+          ),
+          if (widget.avatarBox != '' &&
+              widget.avatarBox != 'Error' &&
+              widget.type != 1 &&
+              widget.avatarBox.length > 5)
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: OverflowBox(
+                maxWidth: 60,
+                maxHeight: 60,
+                child: WpyPic(
+                  width: 60,
+                  height: 60,
+                  widget.avatarBox,
+                  fit: BoxFit.contain,
+                  reduce: false,
                 ),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }

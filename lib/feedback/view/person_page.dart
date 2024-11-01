@@ -171,19 +171,29 @@ class _PersonPageState extends State<PersonPage> {
                   arguments: ImageViewPageArgs([avatar!], 1, 0, false),
                 );
             },
-            child: Hero(
-              tag: widget.args.heroTag,
-              child: ClipRRect(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                child: WpyPic(
-                  avatar == ""
-                      ? '${EnvConfig.QNHD}avatar/beam/20/${uid}.svg'
-                      : 'https://qnhdpic.twt.edu.cn/download/origin/${avatar}',
-                  width: 100.w,
-                  height: 100.w,
-                  fit: BoxFit.contain,
-                ),
-              ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              child: avatar == ""
+                  ? Container(
+                      decoration: BoxDecoration(
+                        color: WpyTheme.of(context)
+                            .get(WpyColorKey.secondaryBackgroundColor),
+                      ),
+                      width: 100.w,
+                      height: 100.h,
+                      child: Center(
+                        child: Text(
+                          nickName!.substring(0, 1),
+                          style: TextUtil.base.w600.NotoSansSC.sp(40),
+                        ),
+                      ),
+                    )
+                  : WpyPic(
+                      'https://qnhdpic.twt.edu.cn/download/origin/${avatar}',
+                      width: 100.w,
+                      height: 100.w,
+                      fit: BoxFit.contain,
+                    ),
             ),
           ),
           SizedBox(width: 10.w),

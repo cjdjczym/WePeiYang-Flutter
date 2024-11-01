@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
@@ -39,10 +38,10 @@ class ReplyDetailPageArgs {
   ReplyDetailPageArgs(this.floor, this.uid, {this.isMessage = false});
 }
 
-class _ReplyDetailPageState extends State<ReplyDetailPage>
-    with SingleTickerProviderStateMixin {
+class _ReplyDetailPageState extends State<ReplyDetailPage> {
   int currentPage = 1;
   List<Floor>? floors;
+  final _scrollController = ScrollController();
 
   double _previousOffset = 0;
   final launchKey = GlobalKey<CommentInputFieldState>();
@@ -138,12 +137,9 @@ class _ReplyDetailPageState extends State<ReplyDetailPage>
     super.dispose();
   }
 
-  final _scrollController = ScrollController();
-
   @override
   Widget build(BuildContext context) {
-    Widget body;
-    Widget checkButton = WButton(
+    final checkButton = WButton(
       onPressed: () {
         // 这里是普通楼层详情页，所以这里一定是普通楼层的回复
         launchKey.currentState?.send(false);
@@ -162,7 +158,6 @@ class _ReplyDetailPageState extends State<ReplyDetailPage>
     );
     Widget mainList1 = ListView.builder(
       controller: _scrollController,
-      key: ValueKey(floors != null ? floors!.length : 0),
       itemCount: floors != null ? floors!.length + 1 : 0 + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -230,7 +225,8 @@ class _ReplyDetailPageState extends State<ReplyDetailPage>
     var inputField =
         CommentInputField(postId: widget.args.floor.postId, key: launchKey);
 
-    body = ColoredBox(
+    final body = ColoredBox(
+      // background color
       color: WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
       child: Column(
         children: [
@@ -406,9 +402,9 @@ class _ReplyDetailPageState extends State<ReplyDetailPage>
           /// 左侧间隔1000是为了离左面尽可能远，从而使popupMenu贴近右侧屏幕
           /// MediaQuery...top + kToolbarHeight是状态栏 + AppBar的高度
           position: RelativeRect.fromLTRB(1000, kToolbarHeight, 0, 0),
-          items: <PopupMenuItem<String>>[
-            new PopupMenuItem<String>(
-                value: '举报',
+          items: [
+            PopupMenuItem(
+                value: 'report',
                 child: Text('举报',
                     style: TextUtil.base.regular
                         .customColor(WpyTheme.of(context)
@@ -416,7 +412,7 @@ class _ReplyDetailPageState extends State<ReplyDetailPage>
                         .sp(13))),
           ],
         ).then((value) {
-          if (value == "举报") {
+          if (value == "report") {
             Navigator.pushNamed(context, FeedbackRouter.report,
                 arguments: ReportPageArgs(widget.args.floor.id, true));
           }
@@ -436,16 +432,9 @@ class _ReplyDetailPageState extends State<ReplyDetailPage>
       actions: [if (widget.args.isMessage) postButton, menuButton],
       title: WButton(
         onPressed: () => _refreshController.requestRefresh(),
-        child: SizedBox(
-          width: double.infinity,
-          height: kToolbarHeight,
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '回复',
-              style: TextUtil.base.NotoSansSC.label(context).w600.sp(18),
-            ),
-          ),
+        child: Text(
+          '回复',
+          style: TextUtil.base.NotoSansSC.label(context).w600.sp(18),
         ),
       ),
       elevation: 0,
