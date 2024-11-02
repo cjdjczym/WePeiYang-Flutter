@@ -17,7 +17,7 @@ class WpyPic extends StatefulWidget {
     this.width,
     this.height,
     this.fit = BoxFit.contain,
-    this.withHolder = false,
+    this.withHolder = true,
     this.holderHeight = 40,
     this.withCache = true,
     this.alignment = Alignment.center,

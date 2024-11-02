@@ -14,6 +14,7 @@ import 'package:we_pei_yang_flutter/commons/util/text_util.dart';
 import 'package:we_pei_yang_flutter/commons/util/toast_provider.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/loading.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/scroll.dart';
+import 'package:we_pei_yang_flutter/commons/widgets/wpy_pic.dart';
 import 'package:we_pei_yang_flutter/feedback/feedback_router.dart';
 import 'package:we_pei_yang_flutter/feedback/network/feedback_service.dart';
 import 'package:we_pei_yang_flutter/feedback/network/post.dart';
@@ -489,7 +490,6 @@ class _LikeMessageItemState extends State<LikeMessageItem> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     Widget sender = Row(
@@ -603,11 +603,11 @@ class _LikeMessageItemState extends State<LikeMessageItem> {
             if (post != null && success! && post!.imageUrls.isNotEmpty)
               ClipRRect(
                 borderRadius: BorderRadius.circular(5),
-                child: Image.network(
+                child: WpyPic(
                   baseUrl + post!.imageUrls[0],
-                  fit: BoxFit.cover,
-                  height: 50,
                   width: 70,
+                  height: 50,
+                  fit: BoxFit.cover,
                 ),
               ),
           ],

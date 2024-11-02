@@ -129,6 +129,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
         keyword: keyword,
         searchMode: searchMode,
         onSuccess: (list, page) {
+          print('page: $page, list: ${list.length}');
           totalPage = page;
           setState(() {
             _list.addAll(list);
@@ -224,7 +225,6 @@ class _SearchResultPageState extends State<SearchResultPage> {
               enablePullUp: true,
               onLoading: _onLoading,
               child: ListView.custom(
-                key: Key('searchResultView'),
                 physics: BouncingScrollPhysics(),
                 controller: _sc,
                 childrenDelegate: SliverChildBuilderDelegate(
@@ -283,10 +283,11 @@ class _SearchResultPageState extends State<SearchResultPage> {
                         ),
                       );
                     }
+                    index--;
                     Widget post = PostCardNormal(_list[index]);
                     return post;
                   },
-                  childCount: _list.length,
+                  childCount: _list.length + 1,
                   findChildIndexCallback: (key) {
                     return _list.indexWhere((m) =>
                         'srm-${m.id}' == (key as ValueKey<String>).value);

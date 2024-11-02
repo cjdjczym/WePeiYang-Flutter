@@ -74,16 +74,20 @@ class _PostCardNormalState extends State<PostCardNormal> {
         child: Row(children: [
           IgnorePointer(
             ignoring: !widget.avatarClickable,
-            child: ProfileImageWithDetailedPopup(
-                post.id,
-                true,
-                post.type,
-                post.avatar,
-                post.uid,
-                post.nickname,
-                post.level.toString(),
-                post.id.toString(),
-                post.avatarBox.toString()),
+            child: Builder(
+              builder: (context) {
+                return ProfileImageWithDetailedPopup(
+                    post.id,
+                    true,
+                    post.type,
+                    post.avatar,
+                    post.uid,
+                    post.nickname,
+                    post.level.toString(),
+                    post.id.toString(),
+                    post.avatarBox.toString());
+              }
+            ),
           ),
           SizedBox(width: 12),
           Expanded(
