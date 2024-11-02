@@ -8,6 +8,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:we_pei_yang_flutter/commons/util/text_util.dart';
 import 'package:we_pei_yang_flutter/commons/util/toast_provider.dart';
+import 'package:we_pei_yang_flutter/commons/widgets/SpoilerMask.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/loading.dart';
 import 'package:we_pei_yang_flutter/feedback/model/feedback_notifier.dart';
 import 'package:we_pei_yang_flutter/feedback/network/feedback_service.dart';
@@ -78,6 +79,7 @@ class _NewPostPageState extends State<NewPostPage> {
                 tagId: args.isFollowing ? args.tagId : dataModel.tag?.id ?? '',
                 departmentId: dataModel.department?.id ?? '',
                 images: images,
+                masked: dataModel.masked,
                 campus: campusNotifier.value,
                 onSuccess: () {
                   ToastProvider.success('发布成功');
@@ -283,6 +285,7 @@ class _LakeSelectorState extends State<LakeSelector> {
                             return WButton(
                               onPressed: () {
                                 notifier.value = tabList[index + 1].id;
+
                                 ///在切换发帖区时，要清空department，不然就会导致参数问题
                                 context.read<NewPostProvider>().department =
                                     null;
@@ -688,7 +691,7 @@ class _ImagesGridViewState extends State<ImagesGridView> {
     );
   }
 
-  Widget imgBuilder(index, List<File> data, length, {onTap}) {
+  Widget imgBuilder(index, List<File> data, length, {onTap, mask = false}) {
     return Stack(fit: StackFit.expand, children: [
       WButton(
         onPressed: () => Navigator.pushNamed(
@@ -703,10 +706,22 @@ class _ImagesGridViewState extends State<ImagesGridView> {
                       WpyTheme.of(context).get(WpyColorKey.dislikeSecondary)),
               borderRadius: BorderRadius.all(Radius.circular(8))),
           child: ClipRRect(
-            child: Image.file(
-              data[index],
-              fit: BoxFit.cover,
-            ),
+            child: () {
+              final img = Image.file(
+                data[index],
+                fit: BoxFit.cover,
+              );
+
+              return AnimatedSwitcher(
+                duration: Duration(milliseconds: 300),
+                child: mask
+                    ? SpoilerMaskImage(
+                        child: img,
+                        particleCount: 100,
+                      )
+                    : img,
+              );
+            }(),
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
         ),
@@ -725,7 +740,7 @@ class _ImagesGridViewState extends State<ImagesGridView> {
                   topLeft: Radius.circular(8), bottomRight: Radius.circular(8)),
             ),
             child: Icon(
-              Icons.close,
+              Icons.edit,
               size: MediaQuery.of(context).size.width / 32,
               color: WpyTheme.of(context)
                   .get(WpyColorKey.secondaryBackgroundColor),
@@ -734,6 +749,68 @@ class _ImagesGridViewState extends State<ImagesGridView> {
         ),
       ),
     ]);
+  }
+
+  showImageOptions(data, index) {
+    final red = WpyTheme.of(context).get(WpyColorKey.dangerousRed);
+    showModalBottomSheet(
+        context: context,
+        useSafeArea: true,
+        clipBehavior: Clip.antiAlias,
+        backgroundColor:
+            WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
+        builder: (_) {
+          return SafeArea(
+            child: Wrap(
+              children: [
+                // masked
+                ListTile(
+                  tileColor: WpyTheme.of(context)
+                      .get(WpyColorKey.primaryBackgroundColor),
+                  title: Row(
+                    children: [
+                      Icon(Icons.grain),
+                      SizedBox(width: 10),
+                      Text(!data.masked.contains(index) ? '罩住图片' : '取消遮罩'),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    print(data.masked);
+                    if (data.masked.contains(index))
+                      data.masked.remove(index);
+                    else
+                      data.masked.add(index);
+                    setState(() {});
+                  },
+                ),
+                //delete
+                ListTile(
+                  tileColor: WpyTheme.of(context)
+                      .get(WpyColorKey.primaryBackgroundColor),
+                  title: Row(
+                    children: [
+                      Icon(Icons.delete, color: red),
+                      SizedBox(width: 10),
+                      Text(
+                        '删除图片',
+                        style: TextStyle(color: red),
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    var result = _showDialog();
+                    if (result == 'ok') {
+                      data.images.removeAt(index);
+                      setState(() {});
+                    }
+                  },
+                ),
+              ],
+            ),
+          );
+        });
   }
 
   @override
@@ -760,13 +837,8 @@ class _ImagesGridViewState extends State<ImagesGridView> {
               index,
               data.images,
               data.images.length,
-              onTap: () async {
-                var result = await _showDialog();
-                if (result == 'ok') {
-                  data.images.removeAt(index);
-                  setState(() {});
-                }
-              },
+              onTap: () => showImageOptions(data, index),
+              mask: data.masked.contains(index),
             );
           }
         },

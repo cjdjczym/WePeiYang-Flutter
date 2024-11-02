@@ -10,7 +10,7 @@ class EnvConfig {
         : "https://qnhd.twt.edu.cn/";
     QNHDPIC = isDevelop
         // 测试服务器域名
-        ? "http://172.18.149.225:7013/"
+        ? "https://qnhdpic.twt.edu.cn/"
         // 正式服务器域名
         : "https://qnhdpic.twt.edu.cn/";
     CUSTOM_CLASS = isDevelop

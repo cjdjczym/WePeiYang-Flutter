@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 class SpoilerMaskImage extends StatelessWidget {
   final Widget child;
 
-  SpoilerMaskImage({super.key, required this.child});
+  final int particleCount;
+
+  SpoilerMaskImage({super.key, required this.child, this.particleCount = 500});
 
   @override
   Widget build(BuildContext context) {
@@ -14,14 +16,21 @@ class SpoilerMaskImage extends StatelessWidget {
       return SizedBox(
         width: constraints.maxWidth,
         height: constraints.maxHeight,
-        child: Stack(children: [child, SpoilerMask()]),
+        child: Stack(children: [
+          child,
+          SpoilerMask(
+            particleCount: particleCount,
+          )
+        ]),
       );
     });
   }
 }
 
 class SpoilerMask extends StatefulWidget {
-  const SpoilerMask({super.key});
+  final int particleCount;
+
+  const SpoilerMask({super.key, this.particleCount = 500});
 
   @override
   State<SpoilerMask> createState() => _SpoilerMaskState();
@@ -76,7 +85,7 @@ class _SpoilerMaskState extends State<SpoilerMask>
             ParticleSimulation(
               width: constraints.maxWidth,
               height: constraints.maxHeight,
-              particleCount: 500,
+              particleCount: widget.particleCount,
               maxParticleSize: 1,
               maxParticleSpeed: 0.7,
             ),

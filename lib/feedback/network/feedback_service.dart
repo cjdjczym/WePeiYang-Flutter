@@ -816,6 +816,7 @@ class FeedbackService with AsyncTimer {
       required content,
       departmentId,
       tagId,
+      List<int> masked = const [],
       required campus,
       required List<String> images,
       required OnSuccess onSuccess,
@@ -829,6 +830,7 @@ class FeedbackService with AsyncTimer {
           'department_id': departmentId,
           'tag_id': tagId,
           'campus': campus,
+          'masked': masked.join(','),
         });
         if (images.isNotEmpty) {
           for (int i = 0; i < images.length; i++)
