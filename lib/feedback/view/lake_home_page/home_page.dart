@@ -83,15 +83,18 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   void listToTop() {
     // 页面还没加载完成， 禁止调用滚动
     if (tabController == null) return;
-    final controller =
-        LakeUtil.lakePageControllers[tabController!.index]!.scrollController;
 
+    print("==> listToTop");
+
+    final controller = LakeUtil.currentController.scrollController;
+
+    print("==> controller.offset: ${controller.offset}");
     // 如果距离太大，直接跳转到1500， 防止动画太夸张
     if (controller.offset > 1500) {
-      controller.jumpTo(1500);
+      controller.jumpTo(1500.toDouble());
     }
     controller.animateTo(
-      -85,
+      -85.toDouble(),
       duration: Duration(milliseconds: 400),
       curve: Curves.easeOutCirc,
     );
@@ -366,6 +369,14 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                           child: child);
                     },
                   ),
+                  // 用来遮挡隐藏上去的搜索框
+                  Container(
+                      color: WpyTheme.of(context)
+                          .get(WpyColorKey.primaryBackgroundColor),
+                      height:
+                          MediaQuery.of(context).padding.top < searchBarHeight
+                              ? searchBarHeight
+                              : MediaQuery.of(context).padding.top),
 
                   // 发帖按钮 addPost
                   Positioned(

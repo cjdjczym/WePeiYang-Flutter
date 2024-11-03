@@ -51,6 +51,14 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     });
   }
 
+  bool _shouldToggleSearchbar(
+      ScrollNotification scrollInfo, double pixels, double maxScrollExtent) {
+    return scrollInfo.metrics.axisDirection == AxisDirection.down &&
+        (pixels - _previousOffset).abs() >= 20 &&
+        pixels >= 10 &&
+        pixels <= maxScrollExtent - 10;
+  }
+
   bool _onScrollNotification(ScrollNotification scrollInfo) {
     final refreshController =
         LakeUtil.lakePageControllers[index]!.refreshController;
@@ -62,20 +70,24 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     if (refreshController.isRefresh && pixels >= 2) {
       refreshController.refreshToIdle();
     }
-    // if (pixels < threshold) {
-    //   lakeModel.onFeedbackOpen();
-    // }
-    //
-    // // Toggle feedback based on scroll direction
-    // if (_shouldToggleFeedback(scrollInfo, pixels, maxScrollExtent)) {
-    //   pixels <= _previousOffset
-    //       ? lakeModel.onFeedbackOpen()
-    //       : lakeModel.onFeedbackClose();
-    //   _previousOffset = pixels;
-    // }
+    if (pixels < threshold) {
+      LakeUtil.showSearch.value = true;
+    }
+
+    // Toggle feedback based on scroll direction
+    if (_shouldToggleSearchbar(scrollInfo, pixels, maxScrollExtent)) {
+      if (pixels <= _previousOffset) {
+        LakeUtil.showSearch.value = true;
+      } else {
+        LakeUtil.showSearch.value = false;
+      }
+      _previousOffset = pixels;
+    }
 
     return true;
   }
+
+  double _previousOffset = 0;
 
   Future<void> _onRefresh() async {
     // 这里的逻辑是: 开始刷新-delay100ms-显示刷新动画-结束刷新
@@ -166,6 +178,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
+    print("==> init state for tab $index");
     pageController = LakeUtil.lakePageControllers[index]!;
     _initializeProvidersIfNeeded();
     _initializeLakeArea();
@@ -191,154 +204,156 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  Widget _buildLoadingPage() {
-    return const RefreshSkeleton();
-  }
-
   bool isRefresh = false;
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
-    return AnimatedSwitcher(
-      duration: Duration(milliseconds: 300),
-      child: FutureBuilder(
-          future: LakeUtil.initPostList(index),
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return _buildErrorPage();
-            }
+    return FutureBuilder(
+        future: LakeUtil.initPostList(index),
+        builder: (context, snapshot) {
+          return AnimatedSwitcher(
+            duration: Duration(milliseconds: 300),
+            child: () {
+              // 为了让AnimatedSwitcher能够执行，这里用了一个匿名函数
+              // 有点丑陋，但是不知道怎么解决
+              if (snapshot.hasError) {
+                return _buildErrorPage();
+              }
 
-            if (snapshot.connectionState != ConnectionState.done) {
-              return _buildLoadingPage();
-            }
-
-            return NotificationListener<ScrollNotification>(
-              child: SmartRefresher(
-                physics: BouncingScrollPhysics(),
-                controller: pageController.refreshController,
-                header: ClassicHeader(
-                  height: 5.h,
-                  completeDuration: Duration(milliseconds: 300),
-                  idleText: '下拉以刷新 (乀*･ω･)乀',
-                  releaseText: '下拉以刷新',
-                  refreshingText: topText[Random().nextInt(topText.length)],
-                  completeText: '刷新完成 (ﾉ*･ω･)ﾉ',
-                  failedText: '刷新失败（；´д｀）ゞ',
-                ),
-                cacheExtent: 11,
-                enablePullDown: true,
-                onRefresh: _onRefresh,
-                footer: ClassicFooter(
-                  idleText: '下拉以刷新',
-                  noDataText: '无数据',
-                  loadingText: '加载中，请稍等  ;P',
-                  failedText: '加载失败（；´д｀）ゞ',
-                ),
-                enablePullUp: true,
-                onLoading: _onLoading,
-                child: AnimatedSwitcher(
-                  duration: Duration(milliseconds: 300),
-                  child: isRefresh
-                      ? _buildLoadingPage()
-                      : ListenableBuilder(
-                          // 这里是Post的Listview, 需要监听Post刷新
-                          listenable: pageController.postHolder,
-                          builder: (context, child) {
-                            return ListView.builder(
-                              controller: pageController.scrollController,
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              itemCount:
-                                  pageController.postHolder.posts.length + 2,
-                              itemBuilder: (context, ind) {
-                                if (ind == 0) return AnnouncementBannerWidget();
-                                ind--;
-                                if (ind == 0)
-                                  return index == 0
-                                      ? HotCard()
-                                      : SizedBox(height: 10.h);
-                                ind--;
-                                if (ind == 0) return AdCardWidget();
-                                ind--;
-                                if (ind == 0)
-                                  return Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: [
-                                        WButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              LakeUtil.sortSeq.value = 1;
-                                              listToTop();
-                                            });
-                                          },
-                                          child: Padding(
-                                            padding: EdgeInsets.fromLTRB(
-                                                20.w, 14.h, 5.w, 6.h),
-                                            child: ValueListenableBuilder(
-                                              valueListenable: LakeUtil.sortSeq,
-                                              builder: (context, sortSeq, _) {
-                                                return Text('默认排序',
-                                                    style: sortSeq != 0
-                                                        ? TextUtil.base
-                                                            .primaryAction(
-                                                                context)
-                                                            .w600
-                                                            .sp(14)
-                                                        : TextUtil.base
-                                                            .label(context)
-                                                            .w400
-                                                            .sp(14));
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                        WButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              LakeUtil.sortSeq.value = 0;
-                                              listToTop();
-                                            });
-                                          },
-                                          child: Padding(
-                                            padding: EdgeInsets.fromLTRB(
-                                                5.w, 14.h, 10.w, 6.h),
-                                            child: ValueListenableBuilder(
+              if (snapshot.connectionState != ConnectionState.done) {
+                return RefreshSkeleton();
+              }
+              return NotificationListener<ScrollNotification>(
+                onNotification: (ScrollNotification scrollInfo) =>
+                    _onScrollNotification(scrollInfo),
+                child: SmartRefresher(
+                  physics: BouncingScrollPhysics(),
+                  controller: pageController.refreshController,
+                  scrollController: pageController.scrollController,
+                  header: ClassicHeader(
+                    height: 5.h,
+                    completeDuration: Duration(milliseconds: 300),
+                    idleText: '下拉以刷新 (乀*･ω･)乀',
+                    releaseText: '下拉以刷新',
+                    refreshingText: topText[Random().nextInt(topText.length)],
+                    completeText: '刷新完成 (ﾉ*･ω･)ﾉ',
+                    failedText: '刷新失败（；´д｀）ゞ',
+                  ),
+                  cacheExtent: 11,
+                  enablePullDown: true,
+                  onRefresh: _onRefresh,
+                  footer: ClassicFooter(
+                    idleText: '下拉以刷新',
+                    noDataText: '无数据',
+                    loadingText: '加载中，请稍等  ;P',
+                    failedText: '加载失败（；´д｀）ゞ',
+                  ),
+                  enablePullUp: true,
+                  onLoading: _onLoading,
+                  child: AnimatedSwitcher(
+                    duration: Duration(milliseconds: 300),
+                    child: isRefresh
+                        ? RefreshSkeleton()
+                        : ListenableBuilder(
+                            // 这里是Post的Listview, 需要监听Post刷新
+                            listenable: pageController.postHolder,
+                            builder: (context, child) {
+                              return ListView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                itemCount:
+                                    pageController.postHolder.posts.length + 2,
+                                itemBuilder: (context, ind) {
+                                  if (ind == 0)
+                                    return AnnouncementBannerWidget();
+                                  ind--;
+                                  if (ind == 0)
+                                    return index == 0
+                                        ? HotCard()
+                                        : SizedBox(height: 10.h);
+                                  ind--;
+                                  if (ind == 0) return AdCardWidget();
+                                  ind--;
+                                  if (ind == 0)
+                                    return Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          WButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                LakeUtil.sortSeq.value = 1;
+                                                listToTop();
+                                              });
+                                            },
+                                            child: Padding(
+                                              padding: EdgeInsets.fromLTRB(
+                                                  20.w, 14.h, 5.w, 6.h),
+                                              child: ValueListenableBuilder(
                                                 valueListenable:
                                                     LakeUtil.sortSeq,
                                                 builder: (context, sortSeq, _) {
-                                                  return Text('最新发帖',
+                                                  return Text('默认排序',
                                                       style: sortSeq != 0
                                                           ? TextUtil.base
-                                                              .label(context)
-                                                              .w400
-                                                              .sp(14)
-                                                          : TextUtil.base
                                                               .primaryAction(
                                                                   context)
                                                               .w600
+                                                              .sp(14)
+                                                          : TextUtil.base
+                                                              .label(context)
+                                                              .w400
                                                               .sp(14));
-                                                }),
+                                                },
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ]);
-                                ind--;
-                                final post = pageController
-                                    .postHolder.posts.values
-                                    .toList()[ind];
-                                return PostCardNormal(post);
-                              },
-                            );
-                          }),
+                                          WButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                LakeUtil.sortSeq.value = 0;
+                                                listToTop();
+                                              });
+                                            },
+                                            child: Padding(
+                                              padding: EdgeInsets.fromLTRB(
+                                                  5.w, 14.h, 10.w, 6.h),
+                                              child: ValueListenableBuilder(
+                                                  valueListenable:
+                                                      LakeUtil.sortSeq,
+                                                  builder:
+                                                      (context, sortSeq, _) {
+                                                    return Text('最新发帖',
+                                                        style: sortSeq != 0
+                                                            ? TextUtil.base
+                                                                .label(context)
+                                                                .w400
+                                                                .sp(14)
+                                                            : TextUtil.base
+                                                                .primaryAction(
+                                                                    context)
+                                                                .w600
+                                                                .sp(14));
+                                                  }),
+                                            ),
+                                          ),
+                                        ]);
+                                  ind--;
+                                  final post = pageController
+                                      .postHolder.posts.values
+                                      .toList()[ind];
+                                  return PostCardNormal(post);
+                                },
+                              );
+                            }),
+                  ),
                 ),
-              ),
-              onNotification: (ScrollNotification scrollInfo) =>
-                  _onScrollNotification(scrollInfo),
-            );
-          }),
-    );
+              );
+            }(),
+          );
+        });
   }
 }
 
@@ -441,7 +456,9 @@ class PostSkeleton extends StatelessWidget {
               child: Container(
                 height: 18,
                 margin: EdgeInsets.symmetric(vertical: 2),
-                width: i == 3 ? 150 : double.infinity,
+                width: i == 3
+                    ? (150 + Random().nextDouble() * 50)
+                    : double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(4)),
                   color: Colors.black12,

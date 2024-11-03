@@ -111,6 +111,10 @@ class LakeUtil {
 
   static final Map<int, LakePageController> lakePageControllers = {};
 
+  static get currentTabId => tabList[currentTab.value].id;
+
+  static get currentController => lakePageControllers[currentTabId]!;
+
   static void _addDefaultTab() {
     WPYTab oTab = WPYTab(id: 0, shortname: '精华', name: '精华');
     tabList.clear();
