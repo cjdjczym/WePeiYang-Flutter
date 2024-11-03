@@ -235,29 +235,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         body: PopScope(
           canPop: false,
           onPopInvoked: (didPop) {
+            // 如果是通过系统返回键触发的 pop，且已经 pop，则直接返回
             if (didPop) return;
 
+            // 重置最后一次显示对话框的时间
             CommonPreferences.lastActivityDialogShownDate.value = "";
+
+            // _tabController 是控制 主页/论坛/个人页面 的 TabBarView 的 TabController
+            // 如果是主页，则判断是否需要退出程序
             if (_tabController.index == 0) {
+              // 检查是否为首次点击或点击间隔超过1秒
               if (_lastPressedAt == null ||
                   DateTime.now().difference(_lastPressedAt!) >
                       Duration(seconds: 1)) {
-                //两次点击间隔超过1秒则重新计时
+                // 更新最后一次点击时间
                 _lastPressedAt = DateTime.now();
-                ToastProvider.running('再按一次退出程序');
+                ToastProvider.running('再按一次退出程序'); // 提示用户再按一次以退出程序
               } else {
-                SystemNavigator.pop();
+                SystemNavigator.pop(); // 退出程序
               }
-            } else if (context.read<LakeModel>().currentTab != 0) {
-              context.read<LakeModel>().tabController!.animateTo(0);
             } else {
+              // 如果已经在第一个 Tab，重新动画到第一个 Tab
               _tabController.animateTo(0);
             }
           },
           child: TabBarView(
             controller: _tabController,
-            physics: NeverScrollableScrollPhysics(),
-            children: pages,
+            physics: NeverScrollableScrollPhysics(), // 禁止用户手动滑动 Tab
+            children: pages, // 显示的页面
           ),
         ),
       ),

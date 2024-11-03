@@ -125,6 +125,47 @@ class ChangeablePost {
         changeId = cId;
 }
 
+class LakeStates {
+  // tabs
+  static List<WPYTab> tabList = [];
+
+  // 当前tab 的index
+  static final ValueNotifier<int> currentTab = ValueNotifier(1);
+  static final ValueNotifier<bool> showSearch = ValueNotifier(true);
+  static final Map<int, LakePageController> lakePageControllers = {};
+
+  static void _addDefaultTab() {
+    WPYTab oTab = WPYTab(id: 0, shortname: '精华', name: '精华');
+    tabList.clear();
+    tabList.add(oTab);
+    lakePageControllers[0] = LakePageController.empty();
+  }
+
+  static Future<void> initTabList() async {
+    if(tabList.isNotEmpty) return;
+    final list = await FeedbackService.getTabList();
+    _addDefaultTab();
+    tabList.addAll(list);
+    for (var element in list) {
+      lakePageControllers[element.id] = LakePageController.empty();
+    }
+  }
+}
+
+class LakePageController {
+  final ScrollController scrollController;
+  final RefreshController refreshController;
+
+  LakePageController({
+    required this.scrollController,
+    required this.refreshController,
+  });
+
+  LakePageController.empty()
+      : scrollController = ScrollController(),
+        refreshController = RefreshController();
+}
+
 class LakeModel extends ChangeNotifier {
   LakePageStatus mainStatus = LakePageStatus.unload;
   Map<int, LakeArea> lakeAreas = {};
@@ -132,11 +173,17 @@ class LakeModel extends ChangeNotifier {
   List<WPYTab> backupList = [WPYTab()];
   int currentTab = 0;
   bool openFeedbackList = false, tabControllerLoaded = false, scroll = false;
-  bool barExtended = true;
   double opacity = 0;
-  TabController? tabController;
+
+  bool showSearch = true;
+
   int sortSeq = 1;
   ChangeablePost horizontalViewingPost = ChangeablePost(Post.empty(), 0);
+
+  set showSearchValue(bool value) {
+    showSearch = value;
+    notifyListeners();
+  }
 
   clearAll() {
     mainStatus = LakePageStatus.unload;
@@ -147,26 +194,13 @@ class LakeModel extends ChangeNotifier {
     openFeedbackList = false;
     tabControllerLoaded = false;
     scroll = false;
-    barExtended = true;
     opacity = 0;
-    tabController?.dispose();
     sortSeq = 1;
+    showSearch = true;
     horizontalViewingPost = ChangeablePost(Post.empty(), 0);
   }
 
   int get currentTabId => tabList[currentTab].id;
-
-  Future<void> initTabList() async {
-    _setLoadingStatus();
-
-    try {
-      _initializeTabList();
-      await _fetchAndAddTabs();
-      _setIdleStatus();
-    } catch (e) {
-      _handleError(e);
-    }
-  }
 
   void _setLoadingStatus() {
     if (mainStatus == LakePageStatus.error ||
@@ -174,21 +208,6 @@ class LakeModel extends ChangeNotifier {
       mainStatus = LakePageStatus.loading;
     }
     notifyListeners();
-  }
-
-  void _initializeTabList() {
-    WPYTab oTab = WPYTab(id: 0, shortname: '精华', name: '精华');
-    tabList.clear();
-    tabList.add(oTab);
-    lakeAreas[0] = LakeArea.empty(); // Initialize the first area
-  }
-
-  Future<void> _fetchAndAddTabs() async {
-    final list = await FeedbackService.getTabList();
-    tabList.addAll(list);
-    for (var element in list) {
-      lakeAreas[element.id] = LakeArea.empty();
-    }
   }
 
   void _setIdleStatus() {
@@ -199,16 +218,6 @@ class LakeModel extends ChangeNotifier {
   void _handleError(dynamic e) {
     mainStatus = LakePageStatus.error;
     ToastProvider.error(e.toString());
-    notifyListeners();
-  }
-
-  void onFeedbackOpen() {
-    barExtended = true;
-    notifyListeners();
-  }
-
-  void onFeedbackClose() {
-    barExtended = false;
     notifyListeners();
   }
 
@@ -273,7 +282,7 @@ class LakeModel extends ChangeNotifier {
   getTabList(FbDepartmentsProvider provider, {OnSuccess? success}) async {
     try {
       provider.initDepartments();
-      initTabList();
+      // initTabList();
       success?.call();
     } catch (e) {
       ToastProvider.error('获取分区失败');

@@ -63,17 +63,17 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     if (refreshController.isRefresh && pixels >= 2) {
       refreshController.refreshToIdle();
     }
-    if (pixels < threshold) {
-      lakeModel.onFeedbackOpen();
-    }
-
-    // Toggle feedback based on scroll direction
-    if (_shouldToggleFeedback(scrollInfo, pixels, maxScrollExtent)) {
-      pixels <= _previousOffset
-          ? lakeModel.onFeedbackOpen()
-          : lakeModel.onFeedbackClose();
-      _previousOffset = pixels;
-    }
+    // if (pixels < threshold) {
+    //   lakeModel.onFeedbackOpen();
+    // }
+    //
+    // // Toggle feedback based on scroll direction
+    // if (_shouldToggleFeedback(scrollInfo, pixels, maxScrollExtent)) {
+    //   pixels <= _previousOffset
+    //       ? lakeModel.onFeedbackOpen()
+    //       : lakeModel.onFeedbackClose();
+    //   _previousOffset = pixels;
+    // }
 
     return true;
   }
@@ -119,7 +119,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  void _handlePostListFailure(DioError e) {
+  void _handlePostListFailure(DioException e) {
     final refreshController =
         context.read<LakeModel>().lakeAreas[index]?.refreshController;
     if ([
@@ -251,78 +251,72 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
                                 .length +
                             2),
                     itemBuilder: (context, ind) {
-                      return Builder(builder: (context) {
-                        if (ind == 0) return AnnouncementBannerWidget();
-                        ind--;
-                        if (ind == 0)
-                          return index == 0
-                              ? HotCard()
-                              : SizedBox(height: 10.h);
-                        ind--;
-                        if (ind == 0) return AdCardWidget();
-                        ind--;
-                        if (ind == 0)
-                          return Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                WButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      context.read<LakeModel>().sortSeq = 1;
-                                      listToTop();
-                                    });
-                                  },
-                                  child: Padding(
-                                    padding: EdgeInsets.fromLTRB(
-                                        20.w, 14.h, 5.w, 6.h),
-                                    child: Text('默认排序',
-                                        style:
-                                            context.read<LakeModel>().sortSeq !=
-                                                    0
-                                                ? TextUtil.base
-                                                    .primaryAction(context)
-                                                    .w600
-                                                    .sp(14)
-                                                : TextUtil.base
-                                                    .label(context)
-                                                    .w400
-                                                    .sp(14)),
-                                  ),
+                      if (ind == 0) return AnnouncementBannerWidget();
+                      ind--;
+                      if (ind == 0)
+                        return index == 0 ? HotCard() : SizedBox(height: 10.h);
+                      ind--;
+                      if (ind == 0) return AdCardWidget();
+                      ind--;
+                      if (ind == 0)
+                        return Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              WButton(
+                                onPressed: () {
+                                  setState(() {
+                                    context.read<LakeModel>().sortSeq = 1;
+                                    listToTop();
+                                  });
+                                },
+                                child: Padding(
+                                  padding:
+                                      EdgeInsets.fromLTRB(20.w, 14.h, 5.w, 6.h),
+                                  child: Text('默认排序',
+                                      style:
+                                          context.read<LakeModel>().sortSeq != 0
+                                              ? TextUtil.base
+                                                  .primaryAction(context)
+                                                  .w600
+                                                  .sp(14)
+                                              : TextUtil.base
+                                                  .label(context)
+                                                  .w400
+                                                  .sp(14)),
                                 ),
-                                WButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      context.read<LakeModel>().sortSeq = 0;
-                                      listToTop();
-                                    });
-                                  },
-                                  child: Padding(
-                                    padding: EdgeInsets.fromLTRB(
-                                        5.w, 14.h, 10.w, 6.h),
-                                    child: Text('最新发帖',
-                                        style:
-                                            context.read<LakeModel>().sortSeq !=
-                                                    0
-                                                ? TextUtil.base
-                                                    .label(context)
-                                                    .w400
-                                                    .sp(14)
-                                                : TextUtil.base
-                                                    .primaryAction(context)
-                                                    .w600
-                                                    .sp(14)),
-                                  ),
+                              ),
+                              WButton(
+                                onPressed: () {
+                                  setState(() {
+                                    context.read<LakeModel>().sortSeq = 0;
+                                    listToTop();
+                                  });
+                                },
+                                child: Padding(
+                                  padding:
+                                      EdgeInsets.fromLTRB(5.w, 14.h, 10.w, 6.h),
+                                  child: Text('最新发帖',
+                                      style:
+                                          context.read<LakeModel>().sortSeq != 0
+                                              ? TextUtil.base
+                                                  .label(context)
+                                                  .w400
+                                                  .sp(14)
+                                              : TextUtil.base
+                                                  .primaryAction(context)
+                                                  .w600
+                                                  .sp(14)),
                                 ),
-                              ]);
-                        ind--;
-                        final post = context
-                            .read<LakeModel>()
-                            .lakeAreas[index]!
-                            .dataList
-                            .values
-                            .toList()[ind];
-                        return PostCardNormal(post);
-                      });
+                              ),
+                            ]);
+                      ind--;
+                      final post = context
+                          .read<LakeModel>()
+                          .lakeAreas[index]!
+                          .dataList
+                          .values
+                          .toList()[ind];
+                      return PostCardNormal(post);
                     },
                   ),
                 ),
