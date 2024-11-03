@@ -157,26 +157,49 @@ class LakeModel extends ChangeNotifier {
   int get currentTabId => tabList[currentTab].id;
 
   Future<void> initTabList() async {
+    _setLoadingStatus();
+
+    try {
+      _initializeTabList();
+      await _fetchAndAddTabs();
+      _setIdleStatus();
+    } catch (e) {
+      _handleError(e);
+    }
+  }
+
+  void _setLoadingStatus() {
     if (mainStatus == LakePageStatus.error ||
-        mainStatus == LakePageStatus.unload)
+        mainStatus == LakePageStatus.unload) {
       mainStatus = LakePageStatus.loading;
+    }
     notifyListeners();
+  }
+
+  void _initializeTabList() {
     WPYTab oTab = WPYTab(id: 0, shortname: '精华', name: '精华');
     tabList.clear();
     tabList.add(oTab);
-    await FeedbackService.getTabList().then((list) {
-      tabList.addAll(list);
-      lakeAreas.addAll({0: LakeArea.empty()});
-      list.forEach((element) {
-        lakeAreas.addAll({element.id: LakeArea.empty()});
-      });
-      mainStatus = LakePageStatus.idle;
-      notifyListeners();
-    }, onError: (e) {
-      mainStatus = LakePageStatus.error;
-      ToastProvider.error(e.error.toString());
-      notifyListeners();
-    });
+    lakeAreas[0] = LakeArea.empty(); // Initialize the first area
+  }
+
+  Future<void> _fetchAndAddTabs() async {
+    final list = await FeedbackService.getTabList();
+    tabList.addAll(list);
+    for (var element in list) {
+      lakeAreas[element.id] = LakeArea.empty();
+    }
+  }
+
+  void _setIdleStatus() {
+    mainStatus = LakePageStatus.idle;
+    notifyListeners();
+  }
+
+  void _handleError(dynamic e) {
+    mainStatus = LakePageStatus.error;
+    ToastProvider.error(e.toString());
+    notifyListeners();
   }
 
   void onFeedbackOpen() {
@@ -247,21 +270,11 @@ class LakeModel extends ChangeNotifier {
     );
   }
 
-  checkTokenAndGetTabList(FbDepartmentsProvider provider,
-      {OnSuccess? success}) async {
+  getTabList(FbDepartmentsProvider provider, {OnSuccess? success}) async {
     try {
       provider.initDepartments();
       initTabList();
       success?.call();
-    } catch (e) {
-      ToastProvider.error('获取分区失败');
-      notifyListeners();
-    }
-  }
-
-  checkTokenAndInitPostList(int index) async {
-    try {
-      initPostList(index);
     } catch (e) {
       ToastProvider.error('获取分区失败');
       notifyListeners();
@@ -290,7 +303,7 @@ class LakeModel extends ChangeNotifier {
       },
       onFailure: (e) {
         ToastProvider.error(e.error.toString());
-        checkTokenAndInitPostList(index);
+        initPostList(index);
         lakeAreas[index]!.status = LakePageStatus.error;
         notifyListeners();
         failure?.call(e);
@@ -298,45 +311,57 @@ class LakeModel extends ChangeNotifier {
     );
   }
 
-  getClipboardWeKoContents(BuildContext context) async {
-    ClipboardData? clipboardData =
-        await Clipboard.getData(Clipboard.kTextPlain);
-    if (clipboardData != null &&
-        clipboardData.text != null &&
-        clipboardData.text!.trim() != '') {
-      String text = clipboardData.text!.trim();
+  Future<void> getClipboardWeKoContents(BuildContext context) async {
+    final clipboardData = await _getValidClipboardData();
+    if (clipboardData == null) return;
 
-      final id = text.find(r"wpy://school_project/(\d*)");
-      if (id.isNotEmpty) {
-        if (CommonPreferences.feedbackLastWeCo.value != id &&
-            CommonPreferences.lakeToken.value != "")
-          FeedbackService.getPostById(
-              id: int.parse(id),
-              onResult: (post) {
-                showDialog<bool>(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return WeKoDialog(
-                      post: post,
-                      onConfirm: () => Navigator.pop(context, true),
-                      onCancel: () => Navigator.pop(context, true),
-                    );
-                  },
-                ).then((confirm) {
-                  if (confirm != null && confirm) {
-                    Navigator.pushNamed(context, FeedbackRouter.detail,
-                        arguments: post);
-                    CommonPreferences.feedbackLastWeCo.value = id;
-                  } else {
-                    CommonPreferences.feedbackLastWeCo.value = id;
-                  }
-                });
-              },
-              onFailure: (e) {
-                // ToastProvider.error(e.error.toString());
-              });
-      }
+    final id = _extractIdFromText(clipboardData);
+    if (id.isEmpty || !_shouldFetchPost(id)) return;
+
+    _fetchPostById(context, id);
+  }
+
+  Future<String?> _getValidClipboardData() async {
+    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+    if (clipboardData?.text?.trim().isNotEmpty ?? false) {
+      return clipboardData!.text!.trim();
     }
+    return null;
+  }
+
+  String _extractIdFromText(String text) {
+    return text.find(r"wpy://school_project/(\d*)");
+  }
+
+  bool _shouldFetchPost(String id) {
+    return CommonPreferences.feedbackLastWeCo.value != id &&
+        CommonPreferences.lakeToken.value.isNotEmpty;
+  }
+
+  void _fetchPostById(BuildContext context, String id) {
+    FeedbackService.getPostById(
+      id: int.parse(id),
+      onResult: (post) => _showWeKoDialog(context, post, id),
+      onFailure: (e) {
+        // Handle error if necessary
+      },
+    );
+  }
+
+  void _showWeKoDialog(BuildContext context, Post post, String id) {
+    showDialog<bool>(
+      context: context,
+      builder: (context) => WeKoDialog(
+        post: post,
+        onConfirm: () => Navigator.pop(context, true),
+        onCancel: () => Navigator.pop(context, true),
+      ),
+    ).then((confirm) {
+      if (confirm == true) {
+        Navigator.pushNamed(context, FeedbackRouter.detail, arguments: post);
+      }
+      CommonPreferences.feedbackLastWeCo.value = id;
+    });
   }
 
   void clearAndSetSplitPost(Post post) {
@@ -353,30 +378,18 @@ class LakeModel extends ChangeNotifier {
 class FestivalProvider extends ChangeNotifier {
   List<Festival> festivalList = [];
   List<Festival> nonePopupList = [];
+  bool _notInit = true;
 
   int get nonePopupListLength {
-    if (_notInit) {
-      initFestivalList();
-    }
+    _initializeIfNeeded();
     return nonePopupList.length;
   }
-
-  bool _notInit = true;
 
   Future<void> initFestivalList() async {
     _notInit = false;
     await FeedbackService.getFestCards(
       onSuccess: (list) {
-        festivalList.clear();
-        festivalList.addAll(list);
-
-        nonePopupList.clear();
-        for (Festival f in list) {
-          if (f.name != 'popup') {
-            nonePopupList.add(f);
-          }
-        }
-        notifyListeners();
+        _updateFestivalLists(list);
       },
       onFailure: (e) {
         notifyListeners();
@@ -384,11 +397,20 @@ class FestivalProvider extends ChangeNotifier {
     );
   }
 
-  int popUpIndex() {
-    for (int i = 0; i < festivalList.length; i++) {
-      if (festivalList[i].name == 'popup') return i;
+  void _initializeIfNeeded() {
+    if (_notInit) {
+      initFestivalList();
     }
-    return -1;
+  }
+
+  void _updateFestivalLists(List<Festival> list) {
+    festivalList = list;
+    nonePopupList = list.where((f) => f.name != 'popup').toList();
+    notifyListeners();
+  }
+
+  int popUpIndex() {
+    return festivalList.indexWhere((f) => f.name == 'popup');
   }
 }
 

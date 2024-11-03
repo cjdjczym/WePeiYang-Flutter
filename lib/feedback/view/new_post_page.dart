@@ -669,27 +669,6 @@ class _ImagesGridViewState extends State<ImagesGridView> {
     setState(() {});
   }
 
-  Future<String?> _showDialog() {
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        titleTextStyle: TextUtil.base.NotoSansSC.w500.sp(14).label(context),
-        title: Text('是否要删除此图片'),
-        actions: [
-          WButton(
-              onPressed: () {
-                Navigator.of(context).pop('cancel');
-              },
-              child: Text('取消')),
-          WButton(
-              onPressed: () {
-                Navigator.of(context).pop('ok');
-              },
-              child: Text('确定')),
-        ],
-      ),
-    );
-  }
 
   Widget imgBuilder(index, List<File> data, length, {onTap, mask = false}) {
     return Stack(fit: StackFit.expand, children: [
@@ -800,11 +779,8 @@ class _ImagesGridViewState extends State<ImagesGridView> {
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    var result = _showDialog();
-                    if (result == 'ok') {
-                      data.images.removeAt(index);
-                      setState(() {});
-                    }
+                    data.images.removeAt(index);
+                    setState(() {});
                   },
                 ),
               ],

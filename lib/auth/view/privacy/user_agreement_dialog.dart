@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:we_pei_yang_flutter/commons/themes/template/wpy_theme_data.dart';
 import 'package:we_pei_yang_flutter/commons/util/text_util.dart';
 import 'package:we_pei_yang_flutter/main.dart';
@@ -150,9 +149,9 @@ class UserAgreementDialog extends Dialog {
 
   Widget _detail(BuildContext context) {
     /// 退出 APP(只适用于安卓端)，ios请用exit(0)
-    void _Quit() async {
-      await SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-    }
+    // void _Quit() async {
+    //   await SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+    // }
 
     if (check == null) {
       return Row(

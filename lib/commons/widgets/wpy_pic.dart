@@ -145,7 +145,10 @@ class _WpyPicState extends State<WpyPic> {
 
       final tags = widget.imageUrl.split('#')[1].split(',');
       if (tags.contains("masked")) {
-        return SpoilerMaskImage(child: imageBuilder());
+        return SizedBox(
+            height: widget.height,
+            width: widget.width,
+            child: SpoilerMaskImage(child: imageBuilder()));
       }
       return imageBuilder();
     }

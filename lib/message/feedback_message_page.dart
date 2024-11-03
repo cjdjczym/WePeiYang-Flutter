@@ -18,6 +18,7 @@ import 'package:we_pei_yang_flutter/commons/widgets/wpy_pic.dart';
 import 'package:we_pei_yang_flutter/feedback/feedback_router.dart';
 import 'package:we_pei_yang_flutter/feedback/network/feedback_service.dart';
 import 'package:we_pei_yang_flutter/feedback/network/post.dart';
+import 'package:we_pei_yang_flutter/feedback/view/components/widget/round_taggings.dart';
 import 'package:we_pei_yang_flutter/feedback/view/reply_detail_page.dart';
 import 'package:we_pei_yang_flutter/home/view/web_views/lake_email.dart';
 import 'package:we_pei_yang_flutter/message/model/message_provider.dart';
@@ -834,22 +835,19 @@ class _FloorMessageItemState extends State<FloorMessageItem> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.all(Radius.circular(100)),
-          child: widget.data.floor.avatar == ''
-              ? SvgPicture.network(
-                  '${EnvConfig.QNHD}avatar/beam/20/${widget.data.floor.nickname}',
-                  width: 30,
-                  height: 30,
-                  fit: BoxFit.cover,
-                )
-              : Image.network(
+        widget.data.floor.avatar == ''
+            ? AvatarPlaceholder(
+                nickname: widget.data.floor.nickname,
+                uid: widget.data.floor.uid)
+            : ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(100)),
+                child: Image.network(
                   baseUrl + '${widget.data.floor.avatar}',
                   width: 30,
                   height: 30,
                   fit: BoxFit.cover,
                 ),
-        ),
+              ),
         SizedBox(width: 6.w),
         Column(
           mainAxisAlignment: MainAxisAlignment.start,

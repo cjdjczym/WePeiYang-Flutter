@@ -273,6 +273,43 @@ class TextPod extends StatelessWidget {
   }
 }
 
+class AvatarPlaceholder extends StatelessWidget {
+  const AvatarPlaceholder(
+      {super.key, required this.nickname, required this.uid});
+
+  final String nickname;
+  final int uid;
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      backgroundColor: () {
+        final colorList =
+            WpyTheme.of(context).getColorSet(WpyColorSetKey.levelColors);
+        int random = uid % colorList.length;
+        return colorList[random];
+      }(),
+      child: Center(
+        child: Text(
+          () {
+            String shortName = nickname
+                .replaceAll(RegExp(r'[\d\*\s]'), '')
+                .replaceAll(RegExp(r'[^\u4e00-\u9fa5]'), '');
+
+            return shortName.isNotEmpty
+                ? shortName.substring(0, 1)
+                : nickname.substring(0, 1);
+          }(),
+          style: TextUtil.base.NotoSansSC.w400
+              .sp(16)
+              .bright(context)
+              .copyWith(height: 0.8),
+        ),
+      ),
+    );
+  }
+}
+
 class ProfileImageWithDetailedPopup extends StatefulWidget {
   final int postOrCommentId;
   final bool fromPostCard;
@@ -339,36 +376,15 @@ class _ProfileImageWithDetailedPopupState
               height: 32,
               width: 32,
               child: (widget.type == 1 || widget.avatar == '')
-                  ? CircleAvatar(
-                      backgroundColor: () {
-                        final colorList = WpyTheme.of(context)
-                            .getColorSet(WpyColorSetKey.levelColors);
-                        int random = widget.uid % colorList.length;
-                        return colorList[random];
-                      }(),
-                      child: Center(
-                        child: Text(
-                          () {
-                            String shortName = widget.nickName
-                                .replaceAll(RegExp(r'[\d\*\s]'), '')
-                                .replaceAll(RegExp(r'[^\u4e00-\u9fa5]'), '');
-
-                            return shortName.isNotEmpty
-                                ? shortName.substring(0, 1)
-                                : widget.nickName.substring(0, 1);
-                          }(),
-                          style: TextUtil.base.NotoSansSC.w400
-                              .sp(16)
-                              .bright(context)
-                              .copyWith(height: 0.8),
-                        ),
-                      ),
-                    )
+                  ? AvatarPlaceholder(
+                      nickname: widget.nickName, uid: widget.uid)
                   : WpyPic(
                       width: 32,
                       height: 32,
                       'https://qnhdpic.twt.edu.cn/download/origin/${widget.avatar}',
                       fit: BoxFit.cover,
+                      withCache: true,
+                      withHolder: false,
                     ),
             ),
           ),
@@ -388,6 +404,8 @@ class _ProfileImageWithDetailedPopupState
                   widget.avatarBox,
                   fit: BoxFit.contain,
                   reduce: false,
+                  withCache: true,
+                  withHolder: false,
                 ),
               ),
             ),

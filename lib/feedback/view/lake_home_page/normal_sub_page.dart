@@ -52,80 +52,98 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   }
 
   bool _onScrollNotification(ScrollNotification scrollInfo) {
-    if (context
-            .read<LakeModel>()
-            .lakeAreas[index]!
-            .refreshController
-            .isRefresh &&
-        scrollInfo.metrics.pixels >= 2)
-      context
-          .read<LakeModel>()
-          .lakeAreas[index]!
-          .refreshController
-          .refreshToIdle();
-    if (scrollInfo.metrics.pixels <
-        12.h + FeedbackHomePageState().searchBarHeight)
-      context.read<LakeModel>().onFeedbackOpen();
-    if (scrollInfo.metrics.axisDirection == AxisDirection.down &&
-        (scrollInfo.metrics.pixels - _previousOffset).abs() >= 20 &&
-        scrollInfo.metrics.pixels >= 10 &&
-        scrollInfo.metrics.pixels <= scrollInfo.metrics.maxScrollExtent - 10) {
-      if (scrollInfo.metrics.pixels <= _previousOffset)
-        context.read<LakeModel>().onFeedbackOpen();
-      else
-        context.read<LakeModel>().onFeedbackClose();
-      _previousOffset = scrollInfo.metrics.pixels;
+    final lakeModel = context.read<LakeModel>();
+    final lakeArea = lakeModel.lakeAreas[index]!;
+    final refreshController = lakeArea.refreshController;
+    final pixels = scrollInfo.metrics.pixels;
+    final maxScrollExtent = scrollInfo.metrics.maxScrollExtent;
+    final threshold = 12.h + FeedbackHomePageState().searchBarHeight;
+
+    // Check for refresh idle state
+    if (refreshController.isRefresh && pixels >= 2) {
+      refreshController.refreshToIdle();
     }
+
+    // Open feedback if within threshold range
+    if (pixels < threshold) {
+      lakeModel.onFeedbackOpen();
+    }
+
+    // Handle feedback opening/closing based on scroll direction and offset
+    if (scrollInfo.metrics.axisDirection == AxisDirection.down &&
+        (pixels - _previousOffset).abs() >= 20 &&
+        pixels >= 10 &&
+        pixels <= maxScrollExtent - 10) {
+      if (pixels <= _previousOffset) {
+        lakeModel.onFeedbackOpen();
+      } else {
+        lakeModel.onFeedbackClose();
+      }
+      _previousOffset = pixels;
+    }
+
     return true;
   }
 
-  onRefresh({retry = true}) async {
+  Future<void> onRefresh({bool retry = true}) async {
     try {
-      context.read<LakeModel>().lakeAreas[index]?.status =
-          LakePageStatus.loading;
-      if (index == 0) context.read<FbHotTagsProvider>().initHotTags();
+      _setLoadingStatus();
+      _initializeHotTagsIfNeeded();
       getRecTag();
-      context.read<LakeModel>().initPostList(index, success: () {
-        context
-            .read<LakeModel>()
-            .lakeAreas[index]
-            ?.refreshController
-            .refreshCompleted();
-      }, failure: (e) {
-        if (e.type == DioExceptionType.connectionTimeout ||
-            e.type == DioExceptionType.receiveTimeout ||
-            e.type == DioExceptionType.sendTimeout)
-          context
-              .read<LakeModel>()
-              .lakeAreas[index]
-              ?.refreshController
-              .refreshToIdle();
-        context
-            .read<LakeModel>()
-            .lakeAreas[index]
-            ?.refreshController
-            .refreshFailed();
-      });
+
+      await _refreshPostList();
+
+      // Initialize additional providers
       context.read<FestivalProvider>().initFestivalList();
       context.read<NoticeProvider>().initNotices();
     } catch (e) {
-      await LakeTokenManager().refreshToken();
-      onRefresh(retry: true);
-      ToastProvider.error("发生未知错误");
-      context
-          .read<LakeModel>()
-          .lakeAreas[index]
-          ?.refreshController
-          .refreshFailed();
+      await _handleRefreshError();
     }
-    /*
-      ToastProvider.error(e.error.toString());
-      context
-          .read<LakeModel>()
-          .lakeAreas[index]
-          ?.refreshController
-          .refreshFailed();
-     */
+  }
+
+  void _setLoadingStatus() {
+    context.read<LakeModel>().lakeAreas[index]?.status = LakePageStatus.loading;
+  }
+
+  void _initializeHotTagsIfNeeded() {
+    if (index == 0) {
+      context.read<FbHotTagsProvider>().initHotTags();
+    }
+  }
+
+  Future<void> _refreshPostList() async {
+    final lakeModel = context.read<LakeModel>();
+    lakeModel.initPostList(
+      index,
+      success: () {
+        lakeModel.lakeAreas[index]?.refreshController.refreshCompleted();
+      },
+      failure: (e) {
+        _handlePostListFailure(e);
+      },
+    );
+  }
+
+  void _handlePostListFailure(DioError e) {
+    final refreshController =
+        context.read<LakeModel>().lakeAreas[index]?.refreshController;
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.sendTimeout) {
+      refreshController?.refreshToIdle();
+    }
+    refreshController?.refreshFailed();
+  }
+
+  Future<void> _handleRefreshError() async {
+    await LakeTokenManager().refreshToken();
+    onRefresh(retry: true);
+    ToastProvider.error("发生未知错误");
+    context
+        .read<LakeModel>()
+        .lakeAreas[index]
+        ?.refreshController
+        .refreshFailed();
   }
 
   _onLoading() {
@@ -149,23 +167,41 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   }
 
   void listToTop() {
-    if (context.read<LakeModel>().lakeAreas[index]!.controller.offset > 1500) {
-      context.read<LakeModel>().lakeAreas[index]!.controller.jumpTo(1500);
+    final controller = context.read<LakeModel>().lakeAreas[index]!.controller;
+
+    if (controller.offset > 1500) {
+      controller.jumpTo(1500);
     }
-    context.read<LakeModel>().lakeAreas[index]!.controller.animateTo(-85,
-        duration: Duration(milliseconds: 400), curve: Curves.easeOutCirc);
+
+    controller.animateTo(
+      -85,
+      duration: Duration(milliseconds: 400),
+      curve: Curves.easeOutCirc,
+    );
   }
 
   @override
   void initState() {
+    super.initState();
+
+    _initializeProvidersIfNeeded();
+    _initializeLakeArea();
+  }
+
+  void _initializeProvidersIfNeeded() {
     if (index == 0) {
       context.read<FbHotTagsProvider>().initHotTags();
       context.read<FestivalProvider>().initFestivalList();
       context.read<NoticeProvider>().initNotices();
     }
+  }
+
+  void _initializeLakeArea() {
     context.read<LakeModel>().fillLakeAreaAndInitPostList(
-        index, RefreshController(), ScrollController());
-    super.initState();
+          index,
+          RefreshController(),
+          ScrollController(),
+        );
   }
 
   @override
