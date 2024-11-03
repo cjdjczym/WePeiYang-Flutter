@@ -989,9 +989,7 @@ class _PostDetailPageState extends State<PostDetailPage>
           (widget.split ?? false) ? Icons.clear : Icons.arrow_back,
           color: WpyTheme.of(context).get(WpyColorKey.labelTextColor),
         ),
-        onPressed: () => (widget.split ?? false)
-            ? context.read<LakeModel>().clearAndSetSplitPost(Post.empty())
-            : Navigator.pop(context, widget.post),
+        onPressed: () => Navigator.pop(context, widget.post),
       ),
       actions: [
         if (hasAdmin) manageButton,
@@ -1487,13 +1485,8 @@ class _ManagerPopUpState extends State<ManagerPopUp>
       onPopInvoked: (didPop) {
         if (didPop) return;
         try {
-          context
-              .read<LakeModel>()
-              .lakeAreas[context
-                  .read<LakeModel>()
-                  .tabList[context.read<LakeModel>().currentTab]
-                  .id]
-              ?.refreshController
+          LakeUtil
+              .lakePageControllers[LakeUtil.currentTab.value]!.refreshController
               .requestRefresh();
         } catch (e) {}
         Navigator.pop(context);
@@ -1750,13 +1743,8 @@ class _AnimatedOptionState extends State<AnimatedOption>
           reason: reason == "" ? null : reason,
           onSuccess: () {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              context
-                  .read<LakeModel>()
-                  .lakeAreas[context
-                      .read<LakeModel>()
-                      .tabList[context.read<LakeModel>().currentTab]
-                      .id]
-                  ?.refreshController
+              LakeUtil.lakePageControllers[LakeUtil.currentTab.value]!
+                  .refreshController
                   .requestRefresh();
             });
             ToastProvider.success('删除成功');
@@ -1779,13 +1767,8 @@ class _AnimatedOptionState extends State<AnimatedOption>
             onSuccess: () => setState(() {
                   isSelected = false;
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    context
-                        .read<LakeModel>()
-                        .lakeAreas[context
-                            .read<LakeModel>()
-                            .tabList[context.read<LakeModel>().currentTab]
-                            .id]
-                        ?.refreshController
+                    LakeUtil.lakePageControllers[LakeUtil.currentTab.value]!
+                        .refreshController
                         .requestRefresh();
                   });
                   Navigator.of(context).pop();

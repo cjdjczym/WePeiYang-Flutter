@@ -58,7 +58,7 @@ class _PostCardNormalState extends State<PostCardNormal> {
   /// 通过分区编号获取分区名称 by pushInl
   String getTypeName(int type) {
     Map<int, String> typeName = {};
-    context.read<LakeModel>().tabList.forEach((e) {
+    LakeUtil.tabList.forEach((e) {
       typeName.addAll({e.id: e.shortname});
     });
     return typeName[type] ?? '';
@@ -74,20 +74,18 @@ class _PostCardNormalState extends State<PostCardNormal> {
         child: Row(children: [
           IgnorePointer(
             ignoring: !widget.avatarClickable,
-            child: Builder(
-              builder: (context) {
-                return ProfileImageWithDetailedPopup(
-                    post.id,
-                    true,
-                    post.type,
-                    post.avatar,
-                    post.uid,
-                    post.nickname,
-                    post.level.toString(),
-                    post.id.toString(),
-                    post.avatarBox.toString());
-              }
-            ),
+            child: Builder(builder: (context) {
+              return ProfileImageWithDetailedPopup(
+                  post.id,
+                  true,
+                  post.type,
+                  post.avatar,
+                  post.uid,
+                  post.nickname,
+                  post.level.toString(),
+                  post.id.toString(),
+                  post.avatarBox.toString());
+            }),
           ),
           SizedBox(width: 12),
           Expanded(
@@ -329,17 +327,13 @@ class _PostCardNormalState extends State<PostCardNormal> {
           if (widget.outer) {
             return GestureDetector(
               onTap: () {
-                if (SplitUtil.needHorizontalView) {
-                  context.read<LakeModel>().clearAndSetSplitPost(post);
-                } else {
-                  FeedbackService.visitPost(
-                      id: widget.post.id, onFailure: (_) {});
-                  Navigator.pushNamed(
-                    context,
-                    FeedbackRouter.detail,
-                    arguments: post,
-                  );
-                }
+                FeedbackService.visitPost(
+                    id: widget.post.id, onFailure: (_) {});
+                Navigator.pushNamed(
+                  context,
+                  FeedbackRouter.detail,
+                  arguments: post,
+                );
               },
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12.h),
@@ -350,7 +344,8 @@ class _PostCardNormalState extends State<PostCardNormal> {
                   children: [
                     ...head,
                     //此处为图片
-                    Center(child: Padding(
+                    Center(
+                        child: Padding(
                       padding: const EdgeInsets.all(2),
                       child: PostPreviewPic(imgUrls: post.imageUrls),
                     )),

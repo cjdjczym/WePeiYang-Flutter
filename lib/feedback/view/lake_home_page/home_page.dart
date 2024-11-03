@@ -13,25 +13,22 @@ import 'package:we_pei_yang_flutter/commons/util/text_util.dart';
 import 'package:we_pei_yang_flutter/commons/util/toast_provider.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/colored_icon.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/loading.dart';
-import 'package:we_pei_yang_flutter/commons/widgets/wpy_pic.dart';
 import 'package:we_pei_yang_flutter/feedback/feedback_router.dart';
 import 'package:we_pei_yang_flutter/feedback/model/feedback_notifier.dart';
 import 'package:we_pei_yang_flutter/feedback/network/feedback_service.dart';
 import 'package:we_pei_yang_flutter/feedback/network/post.dart';
-import 'package:we_pei_yang_flutter/feedback/util/splitscreen_util.dart';
 import 'package:we_pei_yang_flutter/feedback/view/components/widget/tab.dart';
 import 'package:we_pei_yang_flutter/feedback/view/lake_home_page/lake_notifier.dart';
 import 'package:we_pei_yang_flutter/feedback/view/lake_home_page/normal_sub_page.dart';
 import 'package:we_pei_yang_flutter/feedback/view/new_post_page.dart';
-import 'package:we_pei_yang_flutter/feedback/view/post_detail_page.dart';
 import 'package:we_pei_yang_flutter/feedback/view/search_result_page.dart';
 import 'package:we_pei_yang_flutter/message/feedback_message_page.dart';
+import 'package:we_pei_yang_flutter/commons/themes/template/wpy_theme_data.dart';
+import 'package:we_pei_yang_flutter/commons/themes/wpy_theme.dart';
+import 'package:we_pei_yang_flutter/commons/widgets/w_button.dart';
+import 'package:we_pei_yang_flutter/home/view/web_views/festival_page.dart';
+import 'package:we_pei_yang_flutter/message/model/message_provider.dart';
 
-import '../../../commons/themes/template/wpy_theme_data.dart';
-import '../../../commons/themes/wpy_theme.dart';
-import '../../../commons/widgets/w_button.dart';
-import '../../../home/view/web_views/festival_page.dart';
-import '../../../message/model/message_provider.dart';
 import 'package:badges/badges.dart' as badges;
 
 class FeedbackHomePage extends StatefulWidget {
@@ -58,17 +55,16 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   late final FbDepartmentsProvider _departmentsProvider;
 
   initPage() {
-    context.read<LakeModel>().getTabList(_departmentsProvider, success: () {
-      context.read<FbHotTagsProvider>().initRecTag(failure: (e) {
-        ToastProvider.error(e.error.toString());
-      });
-      context.read<FbHotTagsProvider>().initHotTags();
-      FeedbackService.getUserInfo(
-          onSuccess: () {},
-          onFailure: (e) {
-            ToastProvider.error(e.error.toString());
-          });
+    _departmentsProvider.initDepartments();
+    context.read<FbHotTagsProvider>().initRecTag(failure: (e) {
+      ToastProvider.error(e.error.toString());
     });
+    context.read<FbHotTagsProvider>().initHotTags();
+    FeedbackService.getUserInfo(
+        onSuccess: () {},
+        onFailure: (e) {
+          ToastProvider.error(e.error.toString());
+        });
   }
 
   @override
@@ -76,7 +72,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
     super.initState();
     _departmentsProvider =
         Provider.of<FbDepartmentsProvider>(context, listen: false);
-    context.read<LakeModel>().getClipboardWeKoContents(context);
+    LakeUtil.getClipboardWeKoContents(context);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       initPage();
     });
@@ -86,8 +82,12 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   bool get wantKeepAlive => true;
 
   void listToTop() {
+    // 页面还没加载完成， 禁止调用滚动
+    if (tabController == null) return;
     final controller =
-        context.read<LakeModel>().lakeAreas[tabController!.index]!.controller;
+        LakeUtil.lakePageControllers[tabController!.index]!.scrollController;
+
+    // 如果距离太大，直接跳转到1500， 防止动画太夸张
     if (controller.offset > 1500) {
       controller.jumpTo(1500);
     }
@@ -114,14 +114,14 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   }
 
   void _onTabChange() {
-    LakeStates.currentTab.value = tabController!.index;
+    LakeUtil.currentTab.value = tabController!.index;
   }
 
   void _initializeTabController(int length) {
     tabController = TabController(
       length: length,
       vsync: this,
-      initialIndex: min(max(0, length - 1), LakeStates.currentTab.value),
+      initialIndex: min(max(0, length - 1), LakeUtil.currentTab.value),
     )..addListener(() {
         _onTabChange();
       });
@@ -287,7 +287,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
         // 给状态切换增加动画
         duration: Duration(milliseconds: 200),
         child: FutureBuilder(
-            future: LakeStates.initTabList(),
+            future: LakeUtil.initTabList(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return _buildReloadPage();
@@ -297,7 +297,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
               }
               // 第一次打开页面，且加载成功, 初始化tabController
               if (tabController == null) {
-                _initializeTabController(LakeStates.tabList.length);
+                _initializeTabController(LakeUtil.tabList.length);
               }
               return Stack(
                 children: [
@@ -310,12 +310,12 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                                 searchBarHeight,
                             searchBarHeight + tabBarHeight),
                         bottom: Platform.isWindows ? 0 : 52.h),
-                    child: _buildForumView(LakeStates.tabList),
+                    child: _buildForumView(LakeUtil.tabList),
                   ),
 
                   // TabBar & SearchBar，根据是否展开搜索框决定顶部Padding
                   ValueListenableBuilder(
-                    valueListenable: LakeStates.showSearch,
+                    valueListenable: LakeUtil.showSearch,
                     child: Column(
                       children: [
                         Row(
@@ -333,7 +333,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               SizedBox(width: 4),
-                              _buildTabBar(LakeStates.tabList),
+                              _buildTabBar(LakeUtil.tabList),
                               SizedBox(width: 4)
                             ],
                           ),
@@ -373,7 +373,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                     },
                   ),
 
-                  // 发帖按钮
+                  // 发帖按钮 addPost
                   Positioned(
                     bottom: ScreenUtil().bottomBarHeight + 90.h,
                     right: 20.w,
@@ -394,7 +394,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                                     .read<NewPostProvider>()
                                     .postTypeNotifier
                                     .value =
-                                LakeStates.tabList[tabController!.index].id;
+                                LakeUtil.tabList[tabController!.index].id;
                             Navigator.pushNamed(context, FeedbackRouter.newPost,
                                 arguments: NewPostArgs(false, '', 0, ''));
                           }),

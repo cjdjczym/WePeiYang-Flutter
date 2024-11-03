@@ -26,8 +26,8 @@ class AccountUpgradeDialog extends Dialog {
           margin: const EdgeInsets.symmetric(horizontal: 30),
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              color: WpyTheme.of(context)
-                  .get(WpyColorKey.primaryBackgroundColor)),
+              color:
+                  WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor)),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -45,7 +45,7 @@ class AccountUpgradeDialog extends Dialog {
                       UmengCommonSdk.onProfileSignOff();
                       CommonPreferences.clearAllPrefs();
                       if (CommonPreferences.lakeToken.value != '')
-                        context.read<LakeModel>().clearAll();
+                        LakeUtil.clearAll();
                       Navigator.pushNamedAndRemoveUntil(
                           WePeiYangApp.navigatorState.currentContext!,
                           AuthRouter.login,
@@ -68,7 +68,7 @@ class AccountUpgradeDialog extends Dialog {
                         UmengCommonSdk.onProfileSignOff();
                         CommonPreferences.clearAllPrefs();
                         if (CommonPreferences.lakeToken.value != '')
-                          context.read<LakeModel>().clearAll();
+                          LakeUtil.clearAll();
                         Navigator.pushNamedAndRemoveUntil(
                             WePeiYangApp.navigatorState.currentContext!,
                             AuthRouter.login,

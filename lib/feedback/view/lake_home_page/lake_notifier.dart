@@ -91,31 +91,6 @@ enum LakePageStatus {
   error,
 }
 
-class LakeArea {
-  final WPYTab tab;
-  Map<int, Post> dataList;
-  RefreshController refreshController;
-  ScrollController controller;
-  LakePageStatus status;
-  int currentPage = 1;
-  Post horizontalViewingPost = Post.empty();
-
-  LakeArea.empty()
-      : this.tab = WPYTab(),
-        this.dataList = {},
-        this.refreshController = RefreshController(),
-        this.controller = ScrollController(),
-        this.status = LakePageStatus.unload;
-
-  clear() {
-    this.dataList = {};
-    this.refreshController = RefreshController();
-    this.controller = ScrollController();
-    this.status = LakePageStatus.unload;
-    this.horizontalViewingPost = Post.empty();
-  }
-}
-
 class ChangeablePost {
   Post post = Post.empty();
   int changeId = 0;
@@ -125,239 +100,68 @@ class ChangeablePost {
         changeId = cId;
 }
 
-class LakeStates {
+class LakeUtil {
   // tabs
   static List<WPYTab> tabList = [];
 
   // 当前tab 的index
   static final ValueNotifier<int> currentTab = ValueNotifier(1);
   static final ValueNotifier<bool> showSearch = ValueNotifier(true);
+  static final ValueNotifier<int> sortSeq = ValueNotifier(1);
+
   static final Map<int, LakePageController> lakePageControllers = {};
 
   static void _addDefaultTab() {
     WPYTab oTab = WPYTab(id: 0, shortname: '精华', name: '精华');
     tabList.clear();
     tabList.add(oTab);
-    lakePageControllers[0] = LakePageController.empty();
+    lakePageControllers[0] = LakePageController.empty(0, 0);
   }
 
   static Future<void> initTabList() async {
-    if(tabList.isNotEmpty) return;
-    final list = await FeedbackService.getTabList();
+    if (tabList.isNotEmpty) return;
+    final List<WPYTab> list = await FeedbackService.getTabList();
     _addDefaultTab();
     tabList.addAll(list);
-    for (var element in list) {
-      lakePageControllers[element.id] = LakePageController.empty();
+    for (int i = 0; i < list.length; i++) {
+      final tabIndex = i + 1;
+      lakePageControllers[list[i].id] =
+          LakePageController.empty(tabIndex, list[i].id);
     }
   }
-}
 
-class LakePageController {
-  final ScrollController scrollController;
-  final RefreshController refreshController;
+  static Future<void> initPostList(int index) async {
+    final result = await FeedbackService.getPosts(
+        type: '$index',
+        searchMode: sortSeq,
+        page: '1',
+        etag: index == 0 ? 'recommend' : '');
+    final postList = result.item1;
 
-  LakePageController({
-    required this.scrollController,
-    required this.refreshController,
-  });
-
-  LakePageController.empty()
-      : scrollController = ScrollController(),
-        refreshController = RefreshController();
-}
-
-class LakeModel extends ChangeNotifier {
-  LakePageStatus mainStatus = LakePageStatus.unload;
-  Map<int, LakeArea> lakeAreas = {};
-  List<WPYTab> tabList = [];
-  List<WPYTab> backupList = [WPYTab()];
-  int currentTab = 0;
-  bool openFeedbackList = false, tabControllerLoaded = false, scroll = false;
-  double opacity = 0;
-
-  bool showSearch = true;
-
-  int sortSeq = 1;
-  ChangeablePost horizontalViewingPost = ChangeablePost(Post.empty(), 0);
-
-  set showSearchValue(bool value) {
-    showSearch = value;
-    notifyListeners();
+    final controller = LakeUtil.lakePageControllers[index]!;
+    // 调用初始化在PageView里面，渲染PageView时tab已经初始化，可以断言非空
+    controller.currentPage.value = 1;
+    controller.postHolder.resetPosts(postList);
   }
 
-  clearAll() {
-    mainStatus = LakePageStatus.unload;
-    lakeAreas.clear();
-    tabList.clear();
-    backupList = [WPYTab()];
-    currentTab = 0;
-    openFeedbackList = false;
-    tabControllerLoaded = false;
-    scroll = false;
-    opacity = 0;
-    sortSeq = 1;
-    showSearch = true;
-    horizontalViewingPost = ChangeablePost(Post.empty(), 0);
-  }
-
-  int get currentTabId => tabList[currentTab].id;
-
-  void _setLoadingStatus() {
-    if (mainStatus == LakePageStatus.error ||
-        mainStatus == LakePageStatus.unload) {
-      mainStatus = LakePageStatus.loading;
-    }
-    notifyListeners();
-  }
-
-  void _setIdleStatus() {
-    mainStatus = LakePageStatus.idle;
-    notifyListeners();
-  }
-
-  void _handleError(dynamic e) {
-    mainStatus = LakePageStatus.error;
-    ToastProvider.error(e.toString());
-    notifyListeners();
-  }
-
-  void initLakeArea(int index, WPYTab tab, RefreshController rController,
-      ScrollController sController) {
-    // LakeArea lakeArea = new LakeArea._(
-    //     WPYTab(), {}, rController, sController, LakePageStatus.unload);
-    // lakeAreas[index] = lakeArea;
-  }
-
-  void fillLakeAreaAndInitPostList(
-      int index, RefreshController rController, ScrollController sController) {
-    lakeAreas[index]?.clear();
-    initPostList(index, success: () {}, failure: (e) {
-      ToastProvider.error(e.error.toString());
-    });
-  }
-
-  void quietUpdateItem(Post post, WPYTab tab) {
-    lakeAreas[tab]?.dataList.update(
-      post.id,
-      (value) {
-        value.isLike = post.isLike;
-        value.isFav = post.isFav;
-        value.likeCount = post.likeCount;
-        value.favCount = post.favCount;
-        return value;
-      },
-      ifAbsent: () => post,
-    );
-  }
-
-  // 列表去重
-  void _addOrUpdateItems(List<Post> data, int index) {
-    data.forEach((element) {
-      lakeAreas[index]
-          ?.dataList
-          .update(element.id, (value) => element, ifAbsent: () => element);
-    });
-  }
-
-  Future<void> getNextPage(int index,
-      {required OnSuccess success, required OnFailure failure}) async {
-    await FeedbackService.getPosts(
+  static Future<void> getNextPage(int index) async {
+    final result = await FeedbackService.getPosts(
       type: '${index}',
       searchMode: sortSeq,
       etag: index == 0 ? 'recommend' : '',
-      page: lakeAreas[index]!.currentPage + 1,
-      onSuccess: (postList, page) {
-        _addOrUpdateItems(postList, index);
-        lakeAreas[index]!.currentPage += 1;
-        success.call();
-        notifyListeners();
-      },
-      onFailure: (e) {
-        LakeTokenManager().refreshToken();
-        failure.call(e);
-      },
+      page: LakeUtil.lakePageControllers[index]!.currentPage.value + 1,
     );
+    final postList = result.item1;
+    final controller = LakeUtil.lakePageControllers[index]!;
+    controller.postHolder.addPosts(postList);
+    controller.currentPage.value += 1;
   }
 
-  getTabList(FbDepartmentsProvider provider, {OnSuccess? success}) async {
-    try {
-      provider.initDepartments();
-      // initTabList();
-      success?.call();
-    } catch (e) {
-      ToastProvider.error('获取分区失败');
-      notifyListeners();
-    }
+  static void quietUpdateItem(Post post, WPYTab tab) {
+    LakeUtil.lakePageControllers[tab.id]?.postHolder.update(post);
   }
 
-  Future<void> initPostList(int index,
-      {OnSuccess? success, OnFailure? failure, bool reset = false}) async {
-    if (reset) {
-      lakeAreas[index]?.status = LakePageStatus.loading;
-      notifyListeners();
-    }
-    await FeedbackService.getPosts(
-      type: '$index',
-      searchMode: sortSeq,
-      page: '1',
-      etag: index == 0 ? 'recommend' : '',
-      onSuccess: (postList, totalPage) {
-        tabControllerLoaded = true;
-        lakeAreas[index]?.dataList.clear();
-        _addOrUpdateItems(postList, index);
-        lakeAreas[index]!.currentPage = 1;
-        lakeAreas[index]!.status = LakePageStatus.idle;
-        notifyListeners();
-        success?.call();
-      },
-      onFailure: (e) {
-        ToastProvider.error(e.error.toString());
-        initPostList(index);
-        lakeAreas[index]!.status = LakePageStatus.error;
-        notifyListeners();
-        failure?.call(e);
-      },
-    );
-  }
-
-  Future<void> getClipboardWeKoContents(BuildContext context) async {
-    final clipboardData = await _getValidClipboardData();
-    if (clipboardData == null) return;
-
-    final id = _extractIdFromText(clipboardData);
-    if (id.isEmpty || !_shouldFetchPost(id)) return;
-
-    _fetchPostById(context, id);
-  }
-
-  Future<String?> _getValidClipboardData() async {
-    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-    if (clipboardData?.text?.trim().isNotEmpty ?? false) {
-      return clipboardData!.text!.trim();
-    }
-    return null;
-  }
-
-  String _extractIdFromText(String text) {
-    return text.find(r"wpy://school_project/(\d*)");
-  }
-
-  bool _shouldFetchPost(String id) {
-    return CommonPreferences.feedbackLastWeCo.value != id &&
-        CommonPreferences.lakeToken.value.isNotEmpty;
-  }
-
-  void _fetchPostById(BuildContext context, String id) {
-    FeedbackService.getPostById(
-      id: int.parse(id),
-      onResult: (post) => _showWeKoDialog(context, post, id),
-      onFailure: (e) {
-        // Handle error if necessary
-      },
-    );
-  }
-
-  void _showWeKoDialog(BuildContext context, Post post, String id) {
+  static void _showWeKoDialog(BuildContext context, Post post, String id) {
     showDialog<bool>(
       context: context,
       builder: (context) => WeKoDialog(
@@ -373,15 +177,97 @@ class LakeModel extends ChangeNotifier {
     });
   }
 
-  void clearAndSetSplitPost(Post post) {
-    int changeId = horizontalViewingPost.changeId;
-    if (horizontalViewingPost.post.id != post.id) {
-      changeId = changeId + 1;
-      FeedbackService.visitPost(id: post.id, onFailure: (_) {});
+  static void _fetchPostById(BuildContext context, String id) {
+    FeedbackService.getPostById(
+      id: int.parse(id),
+      onResult: (post) => _showWeKoDialog(context, post, id),
+      onFailure: (e) {
+        // Handle error if necessary
+      },
+    );
+  }
+
+  static Future<void> getClipboardWeKoContents(BuildContext context) async {
+    final clipboardData = await _getValidClipboardData();
+    if (clipboardData == null) return;
+
+    final id = _extractIdFromText(clipboardData);
+    if (id.isEmpty || !_shouldFetchPost(id)) return;
+
+    _fetchPostById(context, id);
+  }
+
+  static Future<String?> _getValidClipboardData() async {
+    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+    if (clipboardData?.text?.trim().isNotEmpty ?? false) {
+      return clipboardData!.text!.trim();
     }
-    horizontalViewingPost = ChangeablePost(post, changeId);
+    return null;
+  }
+
+  static String _extractIdFromText(String text) {
+    return text.find(r"wpy://school_project/(\d*)");
+  }
+
+  static bool _shouldFetchPost(String id) {
+    return CommonPreferences.feedbackLastWeCo.value != id &&
+        CommonPreferences.lakeToken.value.isNotEmpty;
+  }
+
+  static void clearAll() {
+    tabList.clear();
+    lakePageControllers.clear();
+    currentTab.value = 1;
+    showSearch.value = true;
+    sortSeq.value = 1;
+  }
+}
+
+class LakePosts extends ChangeNotifier {
+  // 使用post_id 获得Post
+  final Map<int, Post> _posts = {};
+
+  void addPosts(List<Post> postList) {
+    postList.forEach((element) {
+      _posts.update(element.id, (value) => element, ifAbsent: () => element);
+    });
     notifyListeners();
   }
+
+  void update(Post post) {
+    _posts.update(post.id, (value) => post, ifAbsent: () => post);
+    notifyListeners();
+  }
+
+  void resetPosts(List<Post> postList) {
+    _posts.clear();
+    addPosts(postList);
+  }
+
+  Map<int, Post> get posts => _posts;
+}
+
+class LakePageController {
+  final int index;
+  final int tabId;
+  final ScrollController scrollController;
+  final RefreshController refreshController;
+
+  final ValueNotifier<int> currentPage = ValueNotifier(1);
+  final LakePosts postHolder = LakePosts();
+
+  LakePageController({
+    required this.index,
+    required this.tabId,
+    required this.scrollController,
+    required this.refreshController,
+  });
+
+  LakePageController.empty(idx, tabId)
+      : index = idx,
+        tabId = tabId,
+        scrollController = ScrollController(),
+        refreshController = RefreshController();
 }
 
 class FestivalProvider extends ChangeNotifier {

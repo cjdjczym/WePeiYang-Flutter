@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:we_pei_yang_flutter/commons/themes/template/wpy_theme_data.dart';
+import 'package:we_pei_yang_flutter/commons/util/logger.dart';
 import 'package:we_pei_yang_flutter/commons/util/text_util.dart';
 import 'package:we_pei_yang_flutter/commons/util/toast_provider.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/loading.dart';
@@ -62,25 +64,30 @@ class _SearchResultPageState extends State<SearchResultPage> {
       this.title, this.type, this.lakeType);
 
   _refreshPost() async {
-    await FeedbackService.getPosts(
-      type: '$type',
-      departmentId: departmentId,
-      page: currentPage,
-      tagId: tagId,
-      keyword: keyword,
-      searchMode: searchMode,
-      onSuccess: (list, page) {
-        status = SearchPageStatus.idle;
-        totalPage = page;
-        _list.clear();
-        setState(() => _list.addAll(list));
-      },
-      onFailure: (e) {
+    try {
+      final result = await FeedbackService.getPosts(
+        type: '$type',
+        departmentId: departmentId,
+        page: currentPage,
+        tagId: tagId,
+        keyword: keyword,
+        searchMode: searchMode,
+      );
+      final list = result.item1, page = result.item2;
+
+      status = SearchPageStatus.idle;
+      totalPage = page;
+      _list.clear();
+      setState(() => _list.addAll(list));
+    } catch (e) {
+      if (e is DioException) {
         status = SearchPageStatus.idle;
         ToastProvider.error(e.error.toString());
         _refreshController.refreshFailed();
-      },
-    );
+      } else {
+        Logger.reportError(e, StackTrace.current);
+      }
+    }
   }
 
   _onRefresh() async {
@@ -91,27 +98,30 @@ class _SearchResultPageState extends State<SearchResultPage> {
     _refreshPost();
   }
 
-  _onLoading() {
+  _onLoading() async {
     if (currentPage != totalPage) {
       currentPage++;
-      FeedbackService.getPosts(
-        departmentId: departmentId,
-        type: '$type',
-        page: currentPage,
-        tagId: tagId,
-        keyword: keyword,
-        searchMode: searchMode,
-        onSuccess: (list, page) {
-          totalPage = page;
-          setState(() => _list.addAll(list));
-          _refreshController.loadComplete();
-          if (list.isEmpty) _refreshController.loadNoData();
-        },
-        onFailure: (e) {
+      try {
+        final result = await FeedbackService.getPosts(
+            departmentId: departmentId,
+            type: '$type',
+            page: currentPage,
+            tagId: tagId,
+            keyword: keyword,
+            searchMode: searchMode);
+        final list = result.item1, page = result.item2;
+        totalPage = page;
+        setState(() => _list.addAll(list));
+        _refreshController.loadComplete();
+        if (list.isEmpty) _refreshController.loadNoData();
+      } catch (e) {
+        if (e is DioException) {
           ToastProvider.error(e.error.toString());
           _refreshController.loadFailed();
-        },
-      );
+        } else {
+          Logger.reportError(e, StackTrace.current);
+        }
+      }
     } else {
       _refreshController.loadNoData();
     }
@@ -120,26 +130,30 @@ class _SearchResultPageState extends State<SearchResultPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      FeedbackService.getPosts(
-        departmentId: departmentId,
-        type: '$type',
-        page: currentPage,
-        tagId: tagId,
-        keyword: keyword,
-        searchMode: searchMode,
-        onSuccess: (list, page) {
-          print('page: $page, list: ${list.length}');
-          totalPage = page;
-          setState(() {
-            _list.addAll(list);
-            status = SearchPageStatus.idle;
-          });
-        },
-        onFailure: (e) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      try {
+        final result = await FeedbackService.getPosts(
+          departmentId: departmentId,
+          type: '$type',
+          page: currentPage,
+          tagId: tagId,
+          keyword: keyword,
+          searchMode: searchMode,
+        );
+        final list = result.item1, page = result.item2;
+        print('page: $page, list: ${list.length}');
+        totalPage = page;
+        setState(() {
+          _list.addAll(list);
+          status = SearchPageStatus.idle;
+        });
+      } catch (e) {
+        if (e is DioException) {
           ToastProvider.error(e.error.toString());
-        },
-      );
+        } else {
+          Logger.reportError(e, StackTrace.current);
+        }
+      }
     });
   }
 

@@ -244,116 +244,94 @@ class _LakeSelectorState extends State<LakeSelector> {
   @override
   Widget build(BuildContext context) {
     final notifier = context.read<NewPostProvider>().postTypeNotifier;
-    final status = context.select((LakeModel model) => model.mainStatus);
-    final tabList = context.select((LakeModel model) => model.tabList);
-    return switch (status) {
-      LakePageStatus.unload => SizedBox(),
-      LakePageStatus.loading => Container(
-          height: 60,
-          child: Center(
-            child: Loading(),
-          ),
-        ),
-      LakePageStatus.error => Container(
-          height: 60,
-          decoration: BoxDecoration(
-              color:
-                  WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
-              borderRadius: BorderRadius.circular(16)),
-          child: Center(
-            child: Text('点击刷新'),
-          ),
-        ),
-      LakePageStatus.idle => SizedBox(
-          height: 60,
-          width: double.infinity,
-          child: Stack(
-            alignment: Alignment.centerLeft,
-            children: [
-              ValueListenableBuilder<int>(
-                valueListenable: notifier,
-                builder: (context, type, _) {
-                  return Padding(
-                      padding: const EdgeInsets.only(right: 40.0),
-                      child: Builder(builder: (context) {
-                        return ListView.builder(
-                          controller: controller,
-                          itemCount: tabList.length - 1,
-                          scrollDirection: Axis.horizontal,
-                          physics: BouncingScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            return WButton(
-                              onPressed: () {
-                                notifier.value = tabList[index + 1].id;
+    final tabList = LakeUtil.tabList;
+    return SizedBox(
+        height: 60,
+        width: double.infinity,
+        child: Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            ValueListenableBuilder<int>(
+              valueListenable: notifier,
+              builder: (context, type, _) {
+                return Padding(
+                    padding: const EdgeInsets.only(right: 40.0),
+                    child: Builder(builder: (context) {
+                      return ListView.builder(
+                        controller: controller,
+                        itemCount: tabList.length - 1,
+                        scrollDirection: Axis.horizontal,
+                        physics: BouncingScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          return WButton(
+                            onPressed: () {
+                              notifier.value = tabList[index + 1].id;
 
-                                ///在切换发帖区时，要清空department，不然就会导致参数问题
-                                context.read<NewPostProvider>().department =
-                                    null;
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.only(right: 25.w),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(tabList[index + 1].shortname,
-                                        style: type == tabList[index + 1].id
-                                            ? TextUtil.base.NotoSansSC.w400
-                                                .sp(15)
-                                                .primaryAction(context)
-                                            : TextUtil.base.w400
-                                                .sp(15)
-                                                .label(context)),
-                                    Container(
-                                      margin: EdgeInsets.only(top: 2),
-                                      decoration: BoxDecoration(
-                                          color: type == tabList[index + 1].id
-                                              ? WpyTheme.of(context).get(
-                                                  WpyColorKey
-                                                      .primaryActionColor)
-                                              : WpyTheme.of(context).get(
-                                                  WpyColorKey
-                                                      .primaryBackgroundColor),
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(16))),
-                                      width: 28,
-                                      height: 2,
-                                    ),
-                                  ],
-                                ),
+                              ///在切换发帖区时，要清空department，不然就会导致参数问题
+                              context.read<NewPostProvider>().department = null;
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.only(right: 25.w),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(tabList[index + 1].shortname,
+                                      style: type == tabList[index + 1].id
+                                          ? TextUtil.base.NotoSansSC.w400
+                                              .sp(15)
+                                              .primaryAction(context)
+                                          : TextUtil.base.w400
+                                              .sp(15)
+                                              .label(context)),
+                                  Container(
+                                    margin: EdgeInsets.only(top: 2),
+                                    decoration: BoxDecoration(
+                                        color: type == tabList[index + 1].id
+                                            ? WpyTheme.of(context).get(
+                                                WpyColorKey.primaryActionColor)
+                                            : WpyTheme.of(context).get(
+                                                WpyColorKey
+                                                    .primaryBackgroundColor),
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(16))),
+                                    width: 28,
+                                    height: 2,
+                                  ),
+                                ],
                               ),
-                            );
-                          },
-                        );
-                      }));
+                            ),
+                          );
+                        },
+                      );
+                    }));
+              },
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: InkWell(
+                highlightColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                onTap: () {
+                  controller.offset <= 100 * (tabList.length - 2)
+                      ? controller.animateTo(controller.offset + 100,
+                          duration: Duration(milliseconds: 400),
+                          curve: Curves.fastOutSlowIn)
+                      : controller.animateTo(
+                          100 * (tabList.length - 2).toDouble(),
+                          duration: Duration(milliseconds: 800),
+                          curve: Curves.slowMiddle);
                 },
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: InkWell(
-                  highlightColor: Colors.transparent,
-                  splashColor: Colors.transparent,
-                  onTap: () {
-                    controller.offset <= 100 * (tabList.length - 2)
-                        ? controller.animateTo(controller.offset + 100,
-                            duration: Duration(milliseconds: 400),
-                            curve: Curves.fastOutSlowIn)
-                        : controller.animateTo(
-                            100 * (tabList.length - 2).toDouble(),
-                            duration: Duration(milliseconds: 800),
-                            curve: Curves.slowMiddle);
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.only(right: 15.w),
-                    child: Icon(Icons.arrow_forward_ios_sharp,
-                        color: WpyTheme.of(context)
-                            .get(WpyColorKey.labelTextColor),
-                        size: 10.h),
-                  ),
+                child: Padding(
+                  padding: EdgeInsets.only(right: 15.w),
+                  child: Icon(Icons.arrow_forward_ios_sharp,
+                      color:
+                          WpyTheme.of(context).get(WpyColorKey.labelTextColor),
+                      size: 10.h),
                 ),
               ),
-            ],
-          )),
-    };
+            ),
+          ],
+        ));
   }
 }
 
@@ -668,7 +646,6 @@ class _ImagesGridViewState extends State<ImagesGridView> {
     if (!mounted) return;
     setState(() {});
   }
-
 
   Widget imgBuilder(index, List<File> data, length, {onTap, mask = false}) {
     return Stack(fit: StackFit.expand, children: [

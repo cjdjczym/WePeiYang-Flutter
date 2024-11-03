@@ -7,6 +7,7 @@ import 'package:we_pei_yang_flutter/commons/network/wpy_dio.dart';
 import 'package:we_pei_yang_flutter/commons/preferences/common_prefs.dart';
 import 'package:we_pei_yang_flutter/commons/token/lake_token_manager.dart';
 import 'package:we_pei_yang_flutter/commons/util/toast_provider.dart';
+import 'package:we_pei_yang_flutter/commons/util/type_util.dart';
 import 'package:we_pei_yang_flutter/feedback/network/post.dart';
 
 class FeedbackDio extends DioAbstract {
@@ -316,40 +317,35 @@ class FeedbackService with AsyncTimer {
     });
   }
 
-  static getPosts(
-      {keyword,
-      departmentId,
-      tagId,
-      searchMode,
-      etag,
-      required type,
-      required page,
-      required void Function(List<Post> list, int totalPage) onSuccess,
-      required OnFailure onFailure}) async {
-    try {
-      var response = await feedbackDio.get(
-        'posts',
-        queryParameters: {
-          'type': '$type',
-          'search_mode': searchMode ?? 0,
-          'etag': etag ?? '',
-          'content': keyword ?? '',
-          'tag_id': tagId ?? '',
-          'department_id': departmentId ?? '',
+  static Future<Tuple2<List<Post>, int>> getPosts({
+    keyword,
+    departmentId,
+    tagId,
+    searchMode,
+    etag,
+    required type,
+    required page,
+  }) async {
+    var response = await feedbackDio.get(
+      'posts',
+      queryParameters: {
+        'type': '$type',
+        'search_mode': searchMode ?? 0,
+        'etag': etag ?? '',
+        'content': keyword ?? '',
+        'tag_id': tagId ?? '',
+        'department_id': departmentId ?? '',
 
-          ///搜索
-          'page_size': '10',
-          'page': '$page',
-        },
-      );
-      List<Post> list = [];
-      for (Map<String, dynamic> json in response.data['data']['list']) {
-        list.add(Post.fromJson(json));
-      }
-      onSuccess(list, response.data['data']['total']);
-    } on DioException catch (e) {
-      onFailure(e);
+        ///搜索
+        'page_size': '10',
+        'page': '$page',
+      },
+    );
+    List<Post> list = [];
+    for (Map<String, dynamic> json in response.data['data']['list']) {
+      list.add(Post.fromJson(json));
     }
+    return Tuple2(list, response.data['data']['total']);
   }
 
   static getMyPosts({

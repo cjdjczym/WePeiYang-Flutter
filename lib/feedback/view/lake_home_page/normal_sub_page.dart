@@ -52,9 +52,8 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   }
 
   bool _onScrollNotification(ScrollNotification scrollInfo) {
-    final lakeModel = context.read<LakeModel>();
-    final lakeArea = lakeModel.lakeAreas[index]!;
-    final refreshController = lakeArea.refreshController;
+    final refreshController =
+        LakeUtil.lakePageControllers[index]!.refreshController;
     final pixels = scrollInfo.metrics.pixels;
     final maxScrollExtent = scrollInfo.metrics.maxScrollExtent;
     final threshold = 12.h + FeedbackHomePageState().searchBarHeight;
@@ -88,7 +87,6 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
 
   Future<void> onRefresh({bool retry = true}) async {
     try {
-      _setLoadingStatus();
       _initializeHotTagsIfNeeded();
       getRecTag();
 
@@ -99,10 +97,6 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     }
   }
 
-  void _setLoadingStatus() =>
-      context.read<LakeModel>().lakeAreas[index]?.status =
-          LakePageStatus.loading;
-
   void _initializeHotTagsIfNeeded() {
     if (index == 0) {
       context.read<FbHotTagsProvider>().initHotTags();
@@ -110,37 +104,28 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   }
 
   Future<void> _refreshPostList() async {
-    final lakeModel = context.read<LakeModel>();
-    lakeModel.initPostList(
-      index,
-      success: () =>
-          lakeModel.lakeAreas[index]?.refreshController.refreshCompleted(),
-      failure: (e) => _handlePostListFailure(e),
-    );
+    await LakeUtil.initPostList(index)
+        .catchError((e) => _handlePostListFailure(e));
+    pageController.refreshController.refreshCompleted();
   }
 
   void _handlePostListFailure(DioException e) {
-    final refreshController =
-        context.read<LakeModel>().lakeAreas[index]?.refreshController;
+    final refresh = pageController.refreshController;
     if ([
       DioExceptionType.connectionTimeout,
       DioExceptionType.receiveTimeout,
       DioExceptionType.sendTimeout
     ].contains(e.type)) {
-      refreshController?.refreshToIdle();
+      refresh.refreshToIdle();
     }
-    refreshController?.refreshFailed();
+    refresh.refreshFailed();
   }
 
   Future<void> _handleRefreshError() async {
     await LakeTokenManager().refreshToken();
     onRefresh(retry: true);
     ToastProvider.error("发生未知错误");
-    context
-        .read<LakeModel>()
-        .lakeAreas[index]
-        ?.refreshController
-        .refreshFailed();
+    pageController.refreshController.refreshFailed();
   }
 
   void _initializeAdditionalProviders() {
@@ -148,32 +133,32 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     context.read<NoticeProvider>().initNotices();
   }
 
-  _onLoading() {
-    final lakeModel = context.read<LakeModel>();
-    lakeModel.getNextPage(index,
-        success: () =>
-            lakeModel.lakeAreas[index]?.refreshController.loadComplete(),
-        failure: (e) =>
-            lakeModel.lakeAreas[index]?.refreshController.loadFailed());
+  _onLoading() async {
+    final refresh = pageController.refreshController;
+    await LakeUtil.getNextPage(index).catchError((e) => refresh.loadFailed());
+    refresh.loadComplete();
   }
 
   void listToTop() {
-    final controller = context.read<LakeModel>().lakeAreas[index]!.controller;
+    final scroll = pageController.scrollController;
 
-    if (controller.offset > 1500) {
-      controller.jumpTo(1500);
+    if (scroll.offset > 1500) {
+      scroll.jumpTo(1500);
     }
 
-    controller.animateTo(
+    scroll.animateTo(
       -85,
       duration: Duration(milliseconds: 400),
       curve: Curves.easeOutCirc,
     );
   }
 
+  late final LakePageController pageController;
+
   @override
   void initState() {
     super.initState();
+    pageController = LakeUtil.lakePageControllers[index]!;
     _initializeProvidersIfNeeded();
     _initializeLakeArea();
   }
@@ -186,149 +171,150 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   }
 
   void _initializeLakeArea() {
-    context.read<LakeModel>().fillLakeAreaAndInitPostList(
-          index,
-          RefreshController(),
-          ScrollController(),
-        );
+    LakeUtil.initPostList(index);
   }
 
   @override
   bool get wantKeepAlive => true;
 
+  Widget _buildErrorPage() {
+    return const Placeholder();
+  }
+
+  Widget _buildLoadingPage() {
+    return const Placeholder();
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
-    var status =
-        context.select((LakeModel model) => model.lakeAreas[index]!.status);
-
     return AnimatedSwitcher(
       duration: Duration(milliseconds: 300),
-      child: Builder(
-          key: ValueKey(status),
-          builder: (BuildContext context) {
-            if (status == LakePageStatus.idle)
-              return NotificationListener<ScrollNotification>(
-                child: SmartRefresher(
-                  physics: BouncingScrollPhysics(),
-                  controller: context
-                      .read<LakeModel>()
-                      .lakeAreas[index]!
-                      .refreshController,
-                  header: ClassicHeader(
-                    height: 5.h,
-                    completeDuration: Duration(milliseconds: 300),
-                    idleText: '下拉以刷新 (乀*･ω･)乀',
-                    releaseText: '下拉以刷新',
-                    refreshingText: topText[Random().nextInt(topText.length)],
-                    completeText: '刷新完成 (ﾉ*･ω･)ﾉ',
-                    failedText: '刷新失败（；´д｀）ゞ',
-                  ),
-                  cacheExtent: 11,
-                  enablePullDown: true,
-                  onRefresh: onRefresh,
-                  footer: ClassicFooter(
-                    idleText: '下拉以刷新',
-                    noDataText: '无数据',
-                    loadingText: '加载中，请稍等  ;P',
-                    failedText: '加载失败（；´д｀）ゞ',
-                  ),
-                  enablePullUp: true,
-                  onLoading: _onLoading,
-                  child: ListView.builder(
-                    controller:
-                        context.read<LakeModel>().lakeAreas[index]!.controller,
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: context.select((LakeModel model) => index == 0
-                        ? model.lakeAreas[index]!.dataList.values
-                                .toList()
-                                .length +
-                            3
-                        : model.lakeAreas[index]!.dataList.values
-                                .toList()
-                                .length +
-                            2),
-                    itemBuilder: (context, ind) {
-                      if (ind == 0) return AnnouncementBannerWidget();
-                      ind--;
-                      if (ind == 0)
-                        return index == 0 ? HotCard() : SizedBox(height: 10.h);
-                      ind--;
-                      if (ind == 0) return AdCardWidget();
-                      ind--;
-                      if (ind == 0)
-                        return Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              WButton(
-                                onPressed: () {
-                                  setState(() {
-                                    context.read<LakeModel>().sortSeq = 1;
-                                    listToTop();
-                                  });
-                                },
-                                child: Padding(
-                                  padding:
-                                      EdgeInsets.fromLTRB(20.w, 14.h, 5.w, 6.h),
-                                  child: Text('默认排序',
-                                      style:
-                                          context.read<LakeModel>().sortSeq != 0
-                                              ? TextUtil.base
-                                                  .primaryAction(context)
-                                                  .w600
-                                                  .sp(14)
-                                              : TextUtil.base
-                                                  .label(context)
-                                                  .w400
-                                                  .sp(14)),
-                                ),
-                              ),
-                              WButton(
-                                onPressed: () {
-                                  setState(() {
-                                    context.read<LakeModel>().sortSeq = 0;
-                                    listToTop();
-                                  });
-                                },
-                                child: Padding(
-                                  padding:
-                                      EdgeInsets.fromLTRB(5.w, 14.h, 10.w, 6.h),
-                                  child: Text('最新发帖',
-                                      style:
-                                          context.read<LakeModel>().sortSeq != 0
-                                              ? TextUtil.base
-                                                  .label(context)
-                                                  .w400
-                                                  .sp(14)
-                                              : TextUtil.base
-                                                  .primaryAction(context)
-                                                  .w600
-                                                  .sp(14)),
-                                ),
-                              ),
-                            ]);
-                      ind--;
-                      final post = context
-                          .read<LakeModel>()
-                          .lakeAreas[index]!
-                          .dataList
-                          .values
-                          .toList()[ind];
-                      return PostCardNormal(post);
-                    },
-                  ),
+      child: FutureBuilder(
+          future: LakeUtil.initPostList(index),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return _buildErrorPage();
+            }
+
+            if (snapshot.connectionState != ConnectionState.done) {
+              return _buildLoadingPage();
+            }
+
+            return NotificationListener<ScrollNotification>(
+              child: SmartRefresher(
+                physics: BouncingScrollPhysics(),
+                controller:
+                    LakeUtil.lakePageControllers[index]!.refreshController,
+                header: ClassicHeader(
+                  height: 5.h,
+                  completeDuration: Duration(milliseconds: 300),
+                  idleText: '下拉以刷新 (乀*･ω･)乀',
+                  releaseText: '下拉以刷新',
+                  refreshingText: topText[Random().nextInt(topText.length)],
+                  completeText: '刷新完成 (ﾉ*･ω･)ﾉ',
+                  failedText: '刷新失败（；´д｀）ゞ',
                 ),
-                onNotification: (ScrollNotification scrollInfo) =>
-                    _onScrollNotification(scrollInfo),
-              );
-            else if (status == LakePageStatus.unload)
-              return SizedBox();
-            else if (status == LakePageStatus.error)
-              return HomeErrorContainer(onRefresh, true, index);
-            else
-              return LoadingPageWidget(index, onRefresh);
+                cacheExtent: 11,
+                enablePullDown: true,
+                onRefresh: onRefresh,
+                footer: ClassicFooter(
+                  idleText: '下拉以刷新',
+                  noDataText: '无数据',
+                  loadingText: '加载中，请稍等  ;P',
+                  failedText: '加载失败（；´д｀）ゞ',
+                ),
+                enablePullUp: true,
+                onLoading: _onLoading,
+                child: ListenableBuilder(
+                    listenable: pageController.postHolder,
+                    builder: (context, child) {
+                      return ListView.builder(
+                        controller: LakeUtil
+                            .lakePageControllers[index]!.scrollController,
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: pageController.postHolder.posts.length + 2,
+                        itemBuilder: (context, ind) {
+                          if (ind == 0) return AnnouncementBannerWidget();
+                          ind--;
+                          if (ind == 0)
+                            return index == 0
+                                ? HotCard()
+                                : SizedBox(height: 10.h);
+                          ind--;
+                          if (ind == 0) return AdCardWidget();
+                          ind--;
+                          if (ind == 0)
+                            return Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  WButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        LakeUtil.sortSeq.value = 1;
+                                        listToTop();
+                                      });
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.fromLTRB(
+                                          20.w, 14.h, 5.w, 6.h),
+                                      child: ValueListenableBuilder(
+                                        valueListenable: LakeUtil.sortSeq,
+                                        builder: (context, sortSeq, _) {
+                                          return Text('默认排序',
+                                              style: sortSeq != 0
+                                                  ? TextUtil.base
+                                                      .primaryAction(context)
+                                                      .w600
+                                                      .sp(14)
+                                                  : TextUtil.base
+                                                      .label(context)
+                                                      .w400
+                                                      .sp(14));
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  WButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        LakeUtil.sortSeq.value = 0;
+                                        listToTop();
+                                      });
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.fromLTRB(
+                                          5.w, 14.h, 10.w, 6.h),
+                                      child: ValueListenableBuilder(
+                                          valueListenable: LakeUtil.sortSeq,
+                                          builder: (context, sortSeq, _) {
+                                            return Text('最新发帖',
+                                                style: sortSeq != 0
+                                                    ? TextUtil.base
+                                                        .label(context)
+                                                        .w400
+                                                        .sp(14)
+                                                    : TextUtil.base
+                                                        .primaryAction(context)
+                                                        .w600
+                                                        .sp(14));
+                                          }),
+                                    ),
+                                  ),
+                                ]);
+                          ind--;
+                          final post = pageController.postHolder.posts.values
+                              .toList()[ind];
+                          return PostCardNormal(post);
+                        },
+                      );
+                    }),
+              ),
+              onNotification: (ScrollNotification scrollInfo) =>
+                  _onScrollNotification(scrollInfo),
+            );
           }),
     );
   }
@@ -512,7 +498,6 @@ class _HomeErrorContainerState extends State<HomeErrorContainer>
   late final AnimationController controller;
   late final Animation<double> animation;
 
-  late final LakeModel _listProvider;
   late final FbDepartmentsProvider _tagsProvider;
 
   @override
@@ -521,7 +506,6 @@ class _HomeErrorContainerState extends State<HomeErrorContainer>
     controller =
         AnimationController(duration: const Duration(seconds: 1), vsync: this);
     animation = CurveTween(curve: Curves.easeInOutCubic).animate(controller);
-    _listProvider = Provider.of<LakeModel>(context, listen: false);
     _tagsProvider = Provider.of<FbDepartmentsProvider>(context, listen: false);
   }
 
@@ -555,12 +539,8 @@ class _HomeErrorContainerState extends State<HomeErrorContainer>
         try {
           await LakeTokenManager().refreshToken();
           _tagsProvider.initDepartments();
-          _listProvider.initPostList(widget.index, success: () {
-            widget.onPressed;
-          }, failure: (_) {
-            controller.reset();
-            ToastProvider.error('刷新失败');
-          });
+          await LakeUtil.initPostList(widget.index);
+          widget.onPressed.call();
         } catch (e) {
           controller.reset();
           ToastProvider.error('刷新失败');

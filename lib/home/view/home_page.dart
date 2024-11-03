@@ -158,7 +158,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             if (_currentIndex == 1) {
               feedbackKey.currentState?.listToTop();
               // 获取剪切板微口令
-              context.read<LakeModel>().getClipboardWeKoContents(context);
+              LakeUtil.getClipboardWeKoContents(context);
             } else
               _tabController.animateTo(1);
           },
