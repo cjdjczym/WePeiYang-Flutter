@@ -59,30 +59,31 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     final maxScrollExtent = scrollInfo.metrics.maxScrollExtent;
     final threshold = 12.h + FeedbackHomePageState().searchBarHeight;
 
-    // Check for refresh idle state
+    // Check for refresh idle state and feedback conditions
     if (refreshController.isRefresh && pixels >= 2) {
       refreshController.refreshToIdle();
     }
-
-    // Open feedback if within threshold range
     if (pixels < threshold) {
       lakeModel.onFeedbackOpen();
     }
 
-    // Handle feedback opening/closing based on scroll direction and offset
-    if (scrollInfo.metrics.axisDirection == AxisDirection.down &&
-        (pixels - _previousOffset).abs() >= 20 &&
-        pixels >= 10 &&
-        pixels <= maxScrollExtent - 10) {
-      if (pixels <= _previousOffset) {
-        lakeModel.onFeedbackOpen();
-      } else {
-        lakeModel.onFeedbackClose();
-      }
+    // Toggle feedback based on scroll direction
+    if (_shouldToggleFeedback(scrollInfo, pixels, maxScrollExtent)) {
+      pixels <= _previousOffset
+          ? lakeModel.onFeedbackOpen()
+          : lakeModel.onFeedbackClose();
       _previousOffset = pixels;
     }
 
     return true;
+  }
+
+  bool _shouldToggleFeedback(
+      ScrollNotification scrollInfo, double pixels, double maxScrollExtent) {
+    return scrollInfo.metrics.axisDirection == AxisDirection.down &&
+        (pixels - _previousOffset).abs() >= 20 &&
+        pixels >= 10 &&
+        pixels <= maxScrollExtent - 10;
   }
 
   Future<void> onRefresh({bool retry = true}) async {
@@ -92,18 +93,15 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
       getRecTag();
 
       await _refreshPostList();
-
-      // Initialize additional providers
-      context.read<FestivalProvider>().initFestivalList();
-      context.read<NoticeProvider>().initNotices();
+      _initializeAdditionalProviders();
     } catch (e) {
       await _handleRefreshError();
     }
   }
 
-  void _setLoadingStatus() {
-    context.read<LakeModel>().lakeAreas[index]?.status = LakePageStatus.loading;
-  }
+  void _setLoadingStatus() =>
+      context.read<LakeModel>().lakeAreas[index]?.status =
+          LakePageStatus.loading;
 
   void _initializeHotTagsIfNeeded() {
     if (index == 0) {
@@ -115,21 +113,20 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     final lakeModel = context.read<LakeModel>();
     lakeModel.initPostList(
       index,
-      success: () {
-        lakeModel.lakeAreas[index]?.refreshController.refreshCompleted();
-      },
-      failure: (e) {
-        _handlePostListFailure(e);
-      },
+      success: () =>
+          lakeModel.lakeAreas[index]?.refreshController.refreshCompleted(),
+      failure: (e) => _handlePostListFailure(e),
     );
   }
 
   void _handlePostListFailure(DioError e) {
     final refreshController =
         context.read<LakeModel>().lakeAreas[index]?.refreshController;
-    if (e.type == DioExceptionType.connectionTimeout ||
-        e.type == DioExceptionType.receiveTimeout ||
-        e.type == DioExceptionType.sendTimeout) {
+    if ([
+      DioExceptionType.connectionTimeout,
+      DioExceptionType.receiveTimeout,
+      DioExceptionType.sendTimeout
+    ].contains(e.type)) {
       refreshController?.refreshToIdle();
     }
     refreshController?.refreshFailed();
@@ -146,24 +143,18 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
         .refreshFailed();
   }
 
+  void _initializeAdditionalProviders() {
+    context.read<FestivalProvider>().initFestivalList();
+    context.read<NoticeProvider>().initNotices();
+  }
+
   _onLoading() {
-    context.read<LakeModel>().getNextPage(
-      index,
-      success: () {
-        context
-            .read<LakeModel>()
-            .lakeAreas[index]
-            ?.refreshController
-            .loadComplete();
-      },
-      failure: (e) {
-        context
-            .read<LakeModel>()
-            .lakeAreas[index]
-            ?.refreshController
-            .loadFailed();
-      },
-    );
+    final lakeModel = context.read<LakeModel>();
+    lakeModel.getNextPage(index,
+        success: () =>
+            lakeModel.lakeAreas[index]?.refreshController.loadComplete(),
+        failure: (e) =>
+            lakeModel.lakeAreas[index]?.refreshController.loadFailed());
   }
 
   void listToTop() {
@@ -183,16 +174,14 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
-
     _initializeProvidersIfNeeded();
     _initializeLakeArea();
   }
 
   void _initializeProvidersIfNeeded() {
     if (index == 0) {
+      _initializeAdditionalProviders();
       context.read<FbHotTagsProvider>().initHotTags();
-      context.read<FestivalProvider>().initFestivalList();
-      context.read<NoticeProvider>().initNotices();
     }
   }
 

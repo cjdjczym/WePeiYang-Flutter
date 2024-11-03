@@ -57,8 +57,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   late final FbDepartmentsProvider _departmentsProvider;
 
   initPage() {
-    context.read<LakeModel>().getTabList(_departmentsProvider,
-        success: () {
+    context.read<LakeModel>().getTabList(_departmentsProvider, success: () {
       context.read<FbHotTagsProvider>().initRecTag(failure: (e) {
         ToastProvider.error(e.error.toString());
       });
@@ -259,45 +258,51 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
 
     Widget _buildIdleWidget(BuildContext context) {
       var model = context.read<LakeModel>();
-      return TabBar(
-        dividerHeight: 0,
-        indicatorPadding: EdgeInsets.only(bottom: 2.h),
-        labelPadding: EdgeInsets.only(bottom: 3.h),
-        isScrollable: true,
-        tabAlignment: TabAlignment.center,
-        physics: BouncingScrollPhysics(),
-        controller: model.tabController!,
-        labelColor: WpyTheme.of(context).get(WpyColorKey.primaryActionColor),
-        labelStyle: TextUtil.base.w400.NotoSansSC.sp(18),
-        unselectedLabelColor:
-            WpyTheme.of(context).get(WpyColorKey.labelTextColor),
-        unselectedLabelStyle: TextUtil.base.w400.NotoSansSC.sp(18),
-        indicator: CustomIndicator(
-          borderSide: BorderSide(
-            color: WpyTheme.of(context).get(WpyColorKey.primaryActionColor),
-            width: 2.h,
-          ),
-        ),
-        tabs: List<Widget>.generate(
-          tabList.length,
-          (index) => DaTab(
-            text: tabList[index].shortname,
-            withDropDownButton: tabList[index].name == '校务专区',
-          ),
-        ),
-        onTap: (index) {
-          if (tabList[index].id == 1) {
-            _onFeedbackTapped();
-          }
+      return Selector<LakeModel, TabController>(
+        builder: (BuildContext context, tabController, Widget? child) {
+          return TabBar(
+            dividerHeight: 0,
+            indicatorPadding: EdgeInsets.only(bottom: 2.h),
+            labelPadding: EdgeInsets.only(bottom: 3.h),
+            isScrollable: true,
+            tabAlignment: TabAlignment.center,
+            physics: BouncingScrollPhysics(),
+            controller: tabController,
+            labelColor:
+                WpyTheme.of(context).get(WpyColorKey.primaryActionColor),
+            labelStyle: TextUtil.base.w400.NotoSansSC.sp(18),
+            unselectedLabelColor:
+                WpyTheme.of(context).get(WpyColorKey.labelTextColor),
+            unselectedLabelStyle: TextUtil.base.w400.NotoSansSC.sp(18),
+            indicator: CustomIndicator(
+              borderSide: BorderSide(
+                color: WpyTheme.of(context).get(WpyColorKey.primaryActionColor),
+                width: 2.h,
+              ),
+            ),
+            tabs: List.generate(
+              tabList.length,
+              (index) => DaTab(
+                text: tabList[index].shortname,
+                withDropDownButton: tabList[index].name == '校务专区',
+              ),
+            ),
+            onTap: (index) {
+              if (tabList[index].id == 1) {
+                _onFeedbackTapped();
+              }
+            },
+          );
         },
+        selector: (BuildContext, LakeModel lakeModel) =>
+            lakeModel.tabController!,
       );
     }
 
     Widget _buildReloadButton(BuildContext context) {
       return WButton(
-        onPressed: () => context
-            .read<LakeModel>()
-            .getTabList(_departmentsProvider),
+        onPressed: () =>
+            context.read<LakeModel>().getTabList(_departmentsProvider),
         child: Align(
           alignment: Alignment.center,
           child: Text(
@@ -367,6 +372,8 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
 
     Widget _buildTabBarView(
         BuildContext context, LakeModel lakeModel, List<WPYTab> tabs) {
+      print("==> tabs: ${tabs.length}");
+      print("==> controller length: ${lakeModel.tabController!.length}");
       return ExtendedTabBarView(
         cacheExtent: 0,
         controller: lakeModel.tabController!,
@@ -398,10 +405,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                     builder: (_, tabs, __) {
                       final lakeModel = context.read<LakeModel>();
 
-                      if (!lakeModel.tabControllerLoaded) {
-                        _initializeTabController(
-                            context, lakeModel, tabs.length);
-                      }
+                      _initializeTabController(context, lakeModel, tabs.length);
 
                       return tabs.isEmpty
                           ? _buildLoadingView()
