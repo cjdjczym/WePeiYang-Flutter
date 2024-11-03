@@ -122,7 +122,8 @@ class _TjuRebindWidgetState extends State<_TjuRebindWidget> {
                       hintText: 'captcha',
                       hintStyle: hintStyle,
                       filled: true,
-                      fillColor: WpyTheme.of(context).get(WpyColorKey.oldSwitchBarColor),
+                      fillColor: WpyTheme.of(context)
+                          .get(WpyColorKey.oldSwitchBarColor),
                       isCollapsed: true,
                       contentPadding: EdgeInsets.fromLTRB(15, 18, 0, 18),
                       border: OutlineInputBorder(

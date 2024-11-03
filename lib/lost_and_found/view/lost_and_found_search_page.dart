@@ -36,15 +36,15 @@ class _LostAndFoundSearchPageState extends State<LostAndFoundSearchPage> {
           return LakeDialogWidget(
               title: '清除记录',
               titleTextStyle:
-              TextUtil.base.normal.label(context).NotoSansSC.sp(18).w600,
+                  TextUtil.base.normal.label(context).NotoSansSC.sp(18).w600,
               cancelText: '取消',
               cancelTextStyle:
-              TextUtil.base.normal.label(context).NotoSansSC.sp(16).w400,
+                  TextUtil.base.normal.label(context).NotoSansSC.sp(16).w400,
               confirmText: '确定',
               confirmTextStyle:
-              TextUtil.base.normal.reverse(context).NotoSansSC.sp(16).w400,
+                  TextUtil.base.normal.reverse(context).NotoSansSC.sp(16).w400,
               confirmButtonColor:
-              WpyTheme.of(context).get(WpyColorKey.primaryTextButtonColor),
+                  WpyTheme.of(context).get(WpyColorKey.primaryTextButtonColor),
               cancelFun: () {
                 Navigator.pop(context);
               },
@@ -99,38 +99,38 @@ class _LostAndFoundSearchPageState extends State<LostAndFoundSearchPage> {
     );
 
     var selector = Selector<LostAndFoundModel2, String>(
-        selector: (context, model) {
-          return model.currentCategory[type]!;
-        },
-        builder: (context, category, _) {
-          return Flex(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            direction: Axis.horizontal,
-            children: <Widget>[
-              Expanded(
-                child: LostAndFoundTag(category: '全部', type: type),
-                flex: 4,
-              ),
-              Expanded(
-                child: LostAndFoundTag(category: '生活日用', type: type),
-                flex: 5,
-              ),
-              Expanded(
-                child: LostAndFoundTag(category: '数码产品', type: type),
-                flex: 5,
-              ),
-              Expanded(
-                child: LostAndFoundTag(category: '钱包卡证', type: type),
-                flex: 5,
-              ),
-              Expanded(
-                child: LostAndFoundTag(category: '其他', type: type),
-                flex: 4,
-              ),
-            ],
-          );
-        },
-      );
+      selector: (context, model) {
+        return model.currentCategory[type]!;
+      },
+      builder: (context, category, _) {
+        return Flex(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          direction: Axis.horizontal,
+          children: <Widget>[
+            Expanded(
+              child: LostAndFoundTag(category: '全部', type: type),
+              flex: 4,
+            ),
+            Expanded(
+              child: LostAndFoundTag(category: '生活日用', type: type),
+              flex: 5,
+            ),
+            Expanded(
+              child: LostAndFoundTag(category: '数码产品', type: type),
+              flex: 5,
+            ),
+            Expanded(
+              child: LostAndFoundTag(category: '钱包卡证', type: type),
+              flex: 5,
+            ),
+            Expanded(
+              child: LostAndFoundTag(category: '其他', type: type),
+              flex: 4,
+            ),
+          ],
+        );
+      },
+    );
 
     var historyTitle = Container(
       padding: EdgeInsets.symmetric(vertical: 10.h),
@@ -198,7 +198,10 @@ class _LostAndFoundSearchPageState extends State<LostAndFoundSearchPage> {
                 backgroundColor: WpyTheme.of(context)
                     .get(WpyColorKey.primaryBackgroundColor),
                 label: Text(list[list.length - index - 1],
-                    style: TextUtil.base.normal.infoText(context).PingFangSC.sp(14)),
+                    style: TextUtil.base.normal
+                        .infoText(context)
+                        .PingFangSC
+                        .sp(14)),
               ),
             );
           },

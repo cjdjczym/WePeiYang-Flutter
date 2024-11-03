@@ -79,7 +79,8 @@ class AnimatedActiveCourse extends StatelessWidget {
                       Spacer(),
                       Text(
                           formatText(
-                            !(_pairs[0].arrange.isExperiment& CommonPreferences.isShowExperiment.value)
+                            !(_pairs[0].arrange.isExperiment &
+                                    CommonPreferences.isShowExperiment.value)
                                 ? _pairs[0].first.name
                                 : _pairs[0].arrange.name!,
                           ),

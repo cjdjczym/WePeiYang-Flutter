@@ -44,9 +44,9 @@ class MapCalenderState extends State<MapCalendarPage> {
             WpyTheme.of(context).get(WpyColorKey.secondaryBackgroundColor),
         body: SingleChildScrollView(
             child: Padding(
-              padding: EdgeInsets.only(top: 16.h),
-              child: MapAndCalender(),
-            )));
+          padding: EdgeInsets.only(top: 16.h),
+          child: MapAndCalender(),
+        )));
   }
 }
 

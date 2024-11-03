@@ -194,7 +194,7 @@ final colorSetsList = {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
 // 在0.7停止同理
-    stops: [0,  0.7],//0.53
+    stops: [0, 0.7], //0.53
   ),
 
   WpyColorSetKey.backgroundGradient: LinearGradient(

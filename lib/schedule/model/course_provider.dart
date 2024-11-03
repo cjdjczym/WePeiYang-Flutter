@@ -114,7 +114,6 @@ class CourseProvider with ChangeNotifier {
       //   notifyListeners();
       //   _widgetChannel.invokeMethod("refreshScheduleWidget");
       await ClassesService.getClasses(context);
-
     } on DioException catch (_) {
       showDialog(
         context: context,
@@ -205,8 +204,8 @@ class CourseDisplayProvider with ChangeNotifier {
 
   bool get nightMode => CommonPreferences.nightMode.value;
 
-  set showExperiment(bool value){
-    CommonPreferences.isShowExperiment.value=value;
+  set showExperiment(bool value) {
+    CommonPreferences.isShowExperiment.value = value;
     notifyListeners();
   }
 

@@ -77,7 +77,8 @@ class _ResetPwWidgetState extends State<ResetPwWidget> {
                     hintText: '请输入新密码',
                     hintStyle: _hintStyle,
                     filled: true,
-                    fillColor: WpyTheme.of(context).get(WpyColorKey.oldSwitchBarColor),
+                    fillColor:
+                        WpyTheme.of(context).get(WpyColorKey.oldSwitchBarColor),
                     isCollapsed: true,
                     contentPadding: const EdgeInsets.fromLTRB(15, 18, 0, 18),
                     border: OutlineInputBorder(
@@ -106,7 +107,8 @@ class _ResetPwWidgetState extends State<ResetPwWidget> {
                     hintText: '再次输入密码',
                     hintStyle: _hintStyle,
                     filled: true,
-                    fillColor: WpyTheme.of(context).get(WpyColorKey.oldSwitchBarColor),
+                    fillColor:
+                        WpyTheme.of(context).get(WpyColorKey.oldSwitchBarColor),
                     isCollapsed: true,
                     contentPadding: const EdgeInsets.fromLTRB(15, 18, 0, 18),
                     border: OutlineInputBorder(

@@ -12,13 +12,16 @@ class ResetDoneWidget extends StatelessWidget {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-          backgroundColor: WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
+          backgroundColor:
+              WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
           elevation: 0,
           leading: Padding(
             padding: const EdgeInsets.only(left: 15),
             child: WButton(
                 child: Icon(Icons.arrow_back,
-                    color: WpyTheme.of(context).get(WpyColorKey.oldThirdActionColor), size: 35),
+                    color: WpyTheme.of(context)
+                        .get(WpyColorKey.oldThirdActionColor),
+                    size: 35),
                 onPressed: () => Navigator.pop(context)),
           )),
       body: Column(
@@ -42,11 +45,12 @@ class ResetDoneWidget extends StatelessWidget {
                 overlayColor:
                     MaterialStateProperty.resolveWith<Color>((states) {
                   if (states.contains(MaterialState.pressed))
-                    return WpyTheme.of(context).get(WpyColorKey.oldActionRippleColor);
+                    return WpyTheme.of(context)
+                        .get(WpyColorKey.oldActionRippleColor);
                   return WpyTheme.of(context).get(WpyColorKey.oldActionColor);
                 }),
-                backgroundColor:
-                    MaterialStateProperty.all(WpyTheme.of(context).get(WpyColorKey.oldActionColor)),
+                backgroundColor: MaterialStateProperty.all(
+                    WpyTheme.of(context).get(WpyColorKey.oldActionColor)),
                 shape: MaterialStateProperty.all(RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30))),
               ),

@@ -29,7 +29,6 @@ class LostAndFoundSearchResultPage extends StatefulWidget {
 }
 
 class LostAndFoundSearchResultPageArgs {
-
   //负责参数传递，是否要合并到一类里呢,在其他页面里也有用到
 
   final String type;
@@ -139,15 +138,10 @@ class _LostAndFoundSearchResultPageState
         appBar: AppBar(
           flexibleSpace: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                  colors: [
-                    WpyTheme.of(context)
-                        .get(WpyColorKey.primaryActionColor),
-                    WpyTheme.of(context)
-                        .get(WpyColorKey.primaryLighterActionColor),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter),
+              gradient: LinearGradient(colors: [
+                WpyTheme.of(context).get(WpyColorKey.primaryActionColor),
+                WpyTheme.of(context).get(WpyColorKey.primaryLighterActionColor),
+              ], begin: Alignment.topCenter, end: Alignment.bottomCenter),
             ),
           ),
           elevation: 0,
@@ -183,8 +177,8 @@ class _LostAndFoundSearchResultPageState
                     enablePullDown: true,
                     enablePullUp: true,
                     controller:
-                    context.read<LostAndFoundModel2>().refreshController[
-                    context.read<LostAndFoundModel2>().currentType]!,
+                        context.read<LostAndFoundModel2>().refreshController[
+                            context.read<LostAndFoundModel2>().currentType]!,
                     header: ClassicHeader(
                       idleText: '下拉以刷新 (乀*･ω･)乀',
                       releaseText: '下拉以刷新',

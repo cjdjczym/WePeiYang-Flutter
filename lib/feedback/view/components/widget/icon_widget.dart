@@ -92,7 +92,10 @@ class IconWidget extends StatefulWidget {
   final ValueNotifier<bool> isLikedNotifier;
 
   IconWidget(this.iconType,
-      {required this.count, required this.isLike, required this.onLikePressed, required this.size})
+      {required this.count,
+      required this.isLike,
+      required this.onLikePressed,
+      required this.size})
       : countNotifier = ValueNotifier(count),
         isLikedNotifier = ValueNotifier(isLike);
 

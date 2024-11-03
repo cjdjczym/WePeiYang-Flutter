@@ -17,7 +17,7 @@ class LostAndFoundReportPage extends StatelessWidget {
             elevation: 0,
             // 取消阴影
             backgroundColor:
-            WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
+                WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
             leading: IconButton(
               icon: Image.asset(
                 'assets/images/back.png',
@@ -27,8 +27,8 @@ class LostAndFoundReportPage extends StatelessWidget {
               onPressed: () => Navigator.pop(context),
             ),
 
-            title: Text(
-                '举报', style: TextUtil.base.w500.primary(context).sp(18)),
+            title:
+                Text('举报', style: TextUtil.base.w500.primary(context).sp(18)),
             centerTitle: true,
           ),
           body: Padding(
@@ -73,7 +73,7 @@ class LostAndFoundReportPage extends StatelessWidget {
               ],
             ),
           ));
-    } catch (e,stacktrace) {
+    } catch (e, stacktrace) {
       print(e);
       print(stacktrace);
       return Container();

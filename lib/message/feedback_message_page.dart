@@ -139,25 +139,17 @@ class _FeedbackMessagePageState extends State<FeedbackMessagePage>
                       showDialog(
                           context: context,
                           builder: (BuildContext context) {
+                            final textStyle = TextUtil.base.normal.PingFangSC;
                             return LakeDialogWidget(
                               title: '一键已读：',
-                              titleTextStyle: TextUtil.base.normal
-                                  .label(context)
-                                  .PingFangSC
-                                  .sp(18)
-                                  .w600,
+                              titleTextStyle:
+                                  textStyle.label(context).sp(18).w600,
                               content: Text('这将清除所有的消息提醒'),
                               cancelText: "取消",
-                              confirmTextStyle: TextUtil.base.normal
-                                  .reverse(context)
-                                  .PingFangSC
-                                  .sp(16)
-                                  .w600,
-                              cancelTextStyle: TextUtil.base.normal
-                                  .label(context)
-                                  .PingFangSC
-                                  .sp(16)
-                                  .w400,
+                              confirmTextStyle:
+                                  textStyle.reverse(context).sp(16).w600,
+                              cancelTextStyle:
+                                  textStyle.label(context).sp(16).w400,
                               confirmText: "确认",
                               cancelFun: () {
                                 Navigator.pop(context);

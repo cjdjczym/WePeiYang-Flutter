@@ -8,7 +8,8 @@ import 'cookie.dart';
 
 /// Our main class. This is where our main job is done.
 class CookieStorage {
-  final DateFormat _cookieDateFormat = DateFormat("EEE, dd MMM yyyy HH':'mm':'ss 'GMT'");
+  final DateFormat _cookieDateFormat =
+      DateFormat("EEE, dd MMM yyyy HH':'mm':'ss 'GMT'");
   File? _file;
   final Set<Cookie> _cookies = {};
   final Future<String> storePath;
@@ -69,7 +70,8 @@ class CookieStorage {
       final remove = <Cookie>[];
       for (final cookie in _cookies) {
         if (now.isBefore(cookie.expires)) {
-          debugPrint("storing cookie: ${cookie.name}=${cookie.value};${cookie.expires.toIso8601String()}");
+          debugPrint(
+              "storing cookie: ${cookie.name}=${cookie.value};${cookie.expires.toIso8601String()}");
           sink
             ..write(cookie.name)
             ..write("=")
@@ -96,7 +98,8 @@ class CookieStorage {
     }
     final i = ai + 8;
     final j = setCookie.indexOf(';', i);
-    final expiresStr = j == -1 ? setCookie.substring(i) : setCookie.substring(i, j);
+    final expiresStr =
+        j == -1 ? setCookie.substring(i) : setCookie.substring(i, j);
 
     try {
       return _cookieDateFormat.parse(expiresStr, true);
@@ -113,7 +116,8 @@ class CookieStorage {
 
     final i = ai + 8;
     final j = setCookie.indexOf(';', i);
-    final maxAgeStr = j == -1 ? setCookie.substring(i) : setCookie.substring(i, j);
+    final maxAgeStr =
+        j == -1 ? setCookie.substring(i) : setCookie.substring(i, j);
     final maxAge = int.parse(maxAgeStr);
 
     return now.add(Duration(seconds: maxAge));
@@ -137,8 +141,9 @@ class CookieStorage {
           expires = now.add(const Duration(days: 400));
         } else {
           value = setCookie.substring(i + 1, j);
-          expires =
-              findExpiresAttr(setCookie, j) ?? findMaxAgeAttr(setCookie, j, now) ?? now.add(const Duration(days: 400));
+          expires = findExpiresAttr(setCookie, j) ??
+              findMaxAgeAttr(setCookie, j, now) ??
+              now.add(const Duration(days: 400));
         }
 
         final cookie = Cookie(name: key, value: value, expires: expires);

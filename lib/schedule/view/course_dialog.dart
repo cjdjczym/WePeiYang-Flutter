@@ -72,9 +72,10 @@ class CourseDialog extends Dialog {
 
   Widget _getSingleCard(BuildContext context, Pair<Course, int> pair) {
     var teacher = '';
-    final _teachers = (pair.arrange.isExperiment&CommonPreferences.isShowExperiment.value)
-        ? pair.arrange.teacherList
-        : pair.first.teacherList;
+    final _teachers =
+        (pair.arrange.isExperiment & CommonPreferences.isShowExperiment.value)
+            ? pair.arrange.teacherList
+            : pair.first.teacherList;
     _teachers.forEach((str) {
       if (teacher != '') teacher += ', ';
       teacher += str;
@@ -115,7 +116,8 @@ class CourseDialog extends Dialog {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                      (pair.arrange.isExperiment&CommonPreferences.isShowExperiment.value)
+                      (pair.arrange.isExperiment &
+                              CommonPreferences.isShowExperiment.value)
                           ? "${pair.first.name}\n"
                               "${pair.arrange.name!}"
                           : pair.first.name,
@@ -221,8 +223,7 @@ class CourseDialog extends Dialog {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('学分',
-                  style: _hintNameStyle.copyWith(letterSpacing: 3)),
+              Text('学分', style: _hintNameStyle.copyWith(letterSpacing: 3)),
               Padding(
                 padding: const EdgeInsets.only(top: 3, left: 2),
                 child: Text(pair.first.credit, style: _hintValueStyle),
@@ -235,8 +236,7 @@ class CourseDialog extends Dialog {
   Widget _getRow3(Pair<Course, int> pair) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('时间',
-              style: _hintNameStyle.copyWith(letterSpacing: 3)),
+          Text('时间', style: _hintNameStyle.copyWith(letterSpacing: 3)),
           SizedBox(height: 3.h),
           Text(getCourseTime(pair.arrange.unitList), style: _hintValueStyle)
         ],

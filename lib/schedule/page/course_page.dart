@@ -72,17 +72,16 @@ class _CoursePageState extends State<CoursePage> {
   ScreenshotController screenshotController = ScreenshotController();
 
   Future<void> takeScreenshot() async {
-
     ToastProvider.running("生成截图中");
     screenshotController.captureAsUiImage(pixelRatio: 4.0).then((image) async {
       await screenshotController
           .captureFromLongWidget(Stack(
-            children: [
-              Container(
-                width: image?.width.toDouble(),
-                height: image?.height.toDouble(),
-                child: CustomPaint(
-                  painter: ScheduleBackgroundPrinter(
+        children: [
+          Container(
+            width: image?.width.toDouble(),
+            height: image?.height.toDouble(),
+            child: CustomPaint(
+              painter: ScheduleBackgroundPrinter(
                 primaryActionColor:
                     WpyTheme.of(context).get(WpyColorKey.primaryActionColor),
                 primaryLightActionColor: WpyTheme.of(context)

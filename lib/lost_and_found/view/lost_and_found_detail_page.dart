@@ -183,7 +183,9 @@ class _LostAndFoundDetailPageState extends State<LostAndFoundDetailPage> {
     //判断是否是自己的帖子，暂时只能用这个来判断了
     if (CommonPreferences.lakeNickname.value.toString() == post.author) {
       isMine = true;
-    }///判断逻辑要修改
+    }
+
+    ///判断逻辑要修改
 
     void _showConfirmationDialog() {
       var now = DateTime.now();
@@ -677,7 +679,9 @@ class _LostAndFoundDetailPageState extends State<LostAndFoundDetailPage> {
                               SizedBox(width: 2.w),
                               Text(
                                 post.category + '  ',
-                                style: TextUtil.base.normal.infoText(context).sp(10),
+                                style: TextUtil.base.normal
+                                    .infoText(context)
+                                    .sp(10),
                               ),
                             ],
                           ),

@@ -285,9 +285,7 @@ class _TjuBindPageState extends State<TjuBindPage> {
                   Container(
                     margin: EdgeInsets.fromLTRB(0, 22, 0, 50),
                     child: Text(
-                        CommonPreferences.isBindTju.value
-                            ? '已绑定'
-                            : '未绑定',
+                        CommonPreferences.isBindTju.value ? '已绑定' : '未绑定',
                         style:
                             TextUtil.base.bold.oldListAction(context).sp(12)),
                   ),

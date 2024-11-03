@@ -15,8 +15,7 @@ class AboutTwtPage extends StatelessWidget {
       backgroundColor:
           WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
       appBar: AppBar(
-          title: Text('关于天外天',
-              style: TextUtil.base.bold.sp(16).label(context)),
+          title: Text('关于天外天', style: TextUtil.base.bold.sp(16).label(context)),
           elevation: 0,
           centerTitle: true,
           backgroundColor:

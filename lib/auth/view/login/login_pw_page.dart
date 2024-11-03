@@ -142,8 +142,8 @@ class _LoginPwWidgetState extends State<LoginPwWidget> {
                                       value: value,
                                       side: MaterialStateBorderSide.resolveWith(
                                         (_) => BorderSide(
-                                            color: WpyTheme.of(context)
-                                                .get(WpyColorKey.brightTextColor),
+                                            color: WpyTheme.of(context).get(
+                                                WpyColorKey.brightTextColor),
                                             width: 2),
                                       ),
                                       materialTapTargetSize:
@@ -170,7 +170,8 @@ class _LoginPwWidgetState extends State<LoginPwWidget> {
                                     context: context,
                                     barrierDismissible: true,
                                     //直接传入check=checkNotifier会导致_detail组件不显示
-                                    builder: (context) => UserAgreementDialog()),
+                                    builder: (context) =>
+                                        UserAgreementDialog()),
                                 child: Text.rich(TextSpan(
                                     text: "《用户协议》",
                                     style: TextUtil.base
@@ -192,8 +193,8 @@ class _LoginPwWidgetState extends State<LoginPwWidget> {
                                 onPressed: () => showDialog(
                                     context: context,
                                     barrierDismissible: true,
-                                    builder: (context) =>
-                                        PrivacyDialog(md, check: checkNotifier)),
+                                    builder: (context) => PrivacyDialog(md,
+                                        check: checkNotifier)),
                                 child: Text.rich(TextSpan(
                                     text: "《隐私政策》",
                                     style: TextUtil.base

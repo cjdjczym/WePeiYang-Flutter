@@ -129,7 +129,6 @@ class LibraryService {
       ))
           .data['access_token'] as String;
 
-
       // # Authorize
       final result = (await userDio.post(
         "member/authorize",

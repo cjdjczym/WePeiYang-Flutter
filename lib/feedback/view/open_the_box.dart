@@ -58,8 +58,7 @@ class _OpenBoxState extends State<OpenBox> {
             padding: const EdgeInsets.only(left: 15),
             child: WButton(
                 child: Icon(Icons.arrow_back,
-                    color:
-                        WpyTheme.of(context).get(WpyColorKey.oldActionColor),
+                    color: WpyTheme.of(context).get(WpyColorKey.oldActionColor),
                     size: 32),
                 onPressed: () => Navigator.pop(context)),
           ),

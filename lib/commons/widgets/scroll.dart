@@ -19,4 +19,3 @@ class ForceAdjustableScrollPhysics extends ScrollPhysics {
     return offset / scrollFactor;
   }
 }
-

@@ -130,7 +130,8 @@ class LostAndFoundSubPageState extends State<LostAndFoundSubPage>
       child: Container(
         height: searchBarHeight,
         decoration: BoxDecoration(
-            color: WpyTheme.of(context).get(WpyColorKey.secondaryBackgroundColor),
+            color:
+                WpyTheme.of(context).get(WpyColorKey.secondaryBackgroundColor),
             borderRadius: BorderRadius.all(Radius.circular(45.r))),
         child: Row(children: [
           SizedBox(width: 10.w),
@@ -306,7 +307,9 @@ class LostAndFoundSubPageState extends State<LostAndFoundSubPage>
                                     },
                                     child: Card(
                                       elevation: 3,
-                                      shadowColor: WpyTheme.of(context).get(WpyColorKey.backgroundGradientEndColor)
+                                      shadowColor: WpyTheme.of(context)
+                                          .get(WpyColorKey
+                                              .backgroundGradientEndColor)
                                           .withOpacity(0.1),
                                       shape: RoundedRectangleBorder(
                                         borderRadius:
@@ -338,8 +341,8 @@ class LostAndFoundSubPageState extends State<LostAndFoundSubPage>
                                                       child: Text(
                                                           tuple.item1[idx].text,
                                                           style: TextUtil
-                                                              .base.w400.infoText(
-                                                              context)
+                                                              .base.w400
+                                                              .infoText(context)
                                                               .sp(14)
                                                               .h(1.1)
                                                               .NotoSansSC
@@ -427,8 +430,8 @@ class LostAndFoundSubPageState extends State<LostAndFoundSubPage>
                                                 Text(
                                                     _timeAgo(tuple.item1[idx]
                                                         .detailedUploadTime),
-                                                    style: TextUtil
-                                                        .base.w400.infoText(context)
+                                                    style: TextUtil.base.w400
+                                                        .infoText(context)
                                                         .sp(10)
                                                         .NotoSansSC),
                                                 Row(

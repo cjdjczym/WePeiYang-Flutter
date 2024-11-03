@@ -72,7 +72,7 @@ class CommonPreferences {
   /// 自定义课表
   static final customCourseToken = PrefsBean<String>('customCourseToken');
   static final courseAppBarShrink = PrefsBean<bool>('courseAppBarShrink');
-  static final isShowExperiment = PrefsBean<bool>('isShowExperiment',true);
+  static final isShowExperiment = PrefsBean<bool>('isShowExperiment', true);
 
   /// 学期信息
   /// 修改termStart默认值的时候，记得也修改下kotlin/com.twt.service/widget/SchedulePreferences.kt中的默认值
@@ -115,8 +115,8 @@ class CommonPreferences {
   static final displayedTool = PrefsBean<List<CardBean>>('displayedTool', [
     CardBean("assets/svg_pics/lake_butt_icons/daily.png", 21.w, '课程表',
         'Schedule', ScheduleRouter.course),
-    CardBean('assets/svg_pics/lake_butt_icons/QR.png', 24.w, '入校码',
-        'Entry QR', HomeRouter.casQR),
+    CardBean('assets/svg_pics/lake_butt_icons/QR.png', 24.w, '入校码', 'Entry QR',
+        HomeRouter.casQR),
     CardBean("assets/svg_pics/lake_butt_icons/news.png", 24.w, '新闻网', 'News',
         HomeRouter.news),
     CardBean('assets/images/schedule/add.png', 24.w, '地图·校历', 'Map-\nCalendar',

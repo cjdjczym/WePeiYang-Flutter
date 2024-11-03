@@ -40,8 +40,10 @@ class CustomCoursesPage extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(),
                   padding: EdgeInsets.fromLTRB(10.w, 9.h, 8.w, 8.h),
-                  child: ColoredIcon('assets/images/schedule/back.png',
-                  color: WpyTheme.of(context).primary,),
+                  child: ColoredIcon(
+                    'assets/images/schedule/back.png',
+                    color: WpyTheme.of(context).primary,
+                  ),
                 ),
               ),
             ),
@@ -51,25 +53,28 @@ class CustomCoursesPage extends StatelessWidget {
                 style: TextUtil.base.PingFangSC.bold.label(context).sp(18)),
             actions: [
               WButton(
-                onPressed:() {
+                onPressed: () {
                   var pvd = context.read<EditProvider>();
                   pvd.init();
                   showModalBottomSheet(
                     context: context,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(20.r)),
                     ),
                     isDismissible: true,
                     enableDrag: false,
                     isScrollControlled: true,
-                    builder: (context) => EditBottomSheet(pvd.nameSave, pvd.creditSave),
+                    builder: (context) =>
+                        EditBottomSheet(pvd.nameSave, pvd.creditSave),
                   );
-                } ,
+                },
                 child: Container(
                   margin: EdgeInsets.only(right: 15.w),
-                  width: 24.r,height: 24.r,
+                  width: 24.r,
+                  height: 24.r,
                   child: ColoredIcon("assets/images/schedule/add2.png",
-                      color:WpyTheme.of(context).primary),
+                      color: WpyTheme.of(context).primary),
                 ),
               )
             ],

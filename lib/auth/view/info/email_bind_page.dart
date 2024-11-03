@@ -158,9 +158,7 @@ class _EmailBindPageState extends State<EmailBindPage> {
                   Container(
                     margin: const EdgeInsets.fromLTRB(0, 32, 0, 30),
                     child: Text(
-                        (CommonPreferences.email.value != "")
-                            ? '已绑定'
-                            : '未绑定',
+                        (CommonPreferences.email.value != "") ? '已绑定' : '未绑定',
                         style: TextUtil.base.bold.unlabeled(context).sp(12)),
                   ),
                 ],

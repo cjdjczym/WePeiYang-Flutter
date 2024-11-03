@@ -144,7 +144,6 @@ class _EditDetailPageState extends State<EditDetailPage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     var mainColor = WpyTheme.of(context).get(WpyColorKey.primaryActionColor);
@@ -170,11 +169,11 @@ class _EditDetailPageState extends State<EditDetailPage> {
       canPop: false,
       onPopInvoked: (didPop) async {
         if (didPop) return;
-        bool? confirm =await _showDialog('是否保存修改内容?');
-        if(confirm==true){
+        bool? confirm = await _showDialog('是否保存修改内容?');
+        if (confirm == true) {
           var check = _check(context);
           if (check) _saveAndQuit(context);
-        }else{
+        } else {
           Navigator.pop(context);
         }
       },
@@ -296,8 +295,8 @@ class _EditDetailPageState extends State<EditDetailPage> {
               color: WpyTheme.of(context).get(WpyColorKey.errorActionColor),
               child: InkWell(
                 onTap: () async {
-                  bool? confirm=await _showDialog("您确定要删除该课程吗?");
-                  if(confirm == true)_deleteAndQuit(context);
+                  bool? confirm = await _showDialog("您确定要删除该课程吗?");
+                  if (confirm == true) _deleteAndQuit(context);
                 },
                 splashFactory: InkRipple.splashFactory,
                 child: Container(

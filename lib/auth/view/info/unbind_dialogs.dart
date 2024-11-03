@@ -99,7 +99,8 @@ class PhoneUnbindDialog extends Dialog {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(40, 10, 40, 10),
-              child: Text('解除手机号绑定后无法使用手机号登录微北洋。若本次登录为手机号登录则将退出登录，需要您重新进行账号密码登录。您是否确定解除绑定？',
+              child: Text(
+                  '解除手机号绑定后无法使用手机号登录微北洋。若本次登录为手机号登录则将退出登录，需要您重新进行账号密码登录。您是否确定解除绑定？',
                   textAlign: TextAlign.center,
                   style: TextUtil.base.normal.noLine
                       .sp(11)
@@ -155,7 +156,8 @@ class EmailUnbindDialog extends Dialog {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(40, 10, 40, 10),
-              child: Text('解除邮箱绑定后无法使用邮箱登录微北洋。若本次登录为邮箱登录则将退出登录，需要您重新进行账号密码登录。您是否确定解除绑定？',
+              child: Text(
+                  '解除邮箱绑定后无法使用邮箱登录微北洋。若本次登录为邮箱登录则将退出登录，需要您重新进行账号密码登录。您是否确定解除绑定？',
                   textAlign: TextAlign.center,
                   style: TextUtil.base.normal.noLine
                       .sp(11)

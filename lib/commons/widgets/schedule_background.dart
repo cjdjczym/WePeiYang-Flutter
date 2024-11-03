@@ -22,8 +22,8 @@ class ScheduleBackground extends StatelessWidget {
                 WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
             primaryLighterActionColor:
                 WpyTheme.of(context).get(WpyColorKey.primaryLighterActionColor),
-            primaryLightestActionColor:
-                WpyTheme.of(context).get(WpyColorKey.primaryLightestActionColor),
+            primaryLightestActionColor: WpyTheme.of(context)
+                .get(WpyColorKey.primaryLightestActionColor),
           ),
         ),
       ),

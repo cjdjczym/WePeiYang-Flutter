@@ -39,8 +39,8 @@ class _ResetNicknamePageState extends State<ResetNicknamePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: Text('更改用户名',
-              style: TextUtil.base.bold.sp(17).blue52hz(context)),
+          title:
+              Text('更改用户名', style: TextUtil.base.bold.sp(17).blue52hz(context)),
           elevation: 0,
           centerTitle: true,
           backgroundColor:

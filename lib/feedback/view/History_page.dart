@@ -87,21 +87,21 @@ class _HistoryPageState extends State<HistoryPage> {
     _tabController = PageController(
       initialPage: 0,
     )..addListener(() {
-      var absPosition =
-      (_tabController.page! - _currentTab.value.index).abs();
-      if (absPosition > 0.5 && !tap) {
-        _currentTab.value = _CurrentTab.values[_tabController.page!.round()];
-      }
-      _refreshController.requestRefresh();
-    });
+        var absPosition =
+            (_tabController.page! - _currentTab.value.index).abs();
+        if (absPosition > 0.5 && !tap) {
+          _currentTab.value = _CurrentTab.values[_tabController.page!.round()];
+        }
+        _refreshController.requestRefresh();
+      });
     _currentTab.addListener(() {
       tap = true;
       _tabController
           .animateToPage(
-        1,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.ease,
-      )
+            1,
+            duration: Duration(milliseconds: 300),
+            curve: Curves.ease,
+          )
           .then((value) => tap = false);
     });
     _getMyHistory();
@@ -161,7 +161,7 @@ class _HistoryPageState extends State<HistoryPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor:
-        WpyTheme.of(context).get(WpyColorKey.secondaryBackgroundColor),
+            WpyTheme.of(context).get(WpyColorKey.secondaryBackgroundColor),
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_ios_rounded,

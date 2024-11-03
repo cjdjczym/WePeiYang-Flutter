@@ -13,7 +13,9 @@ class ClassesNeedVPNDialog extends Dialog {
         margin: const EdgeInsets.symmetric(horizontal: 30),
         padding: const EdgeInsets.symmetric(horizontal: 30),
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10), color:  WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor)),
+            borderRadius: BorderRadius.circular(10),
+            color:
+                WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -24,26 +26,36 @@ class ClassesNeedVPNDialog extends Dialog {
                 Icon(
                   Icons.notifications_none,
                   size: 23,
-                  color: WpyTheme.of(context).get(WpyColorKey.oldThirdActionColor),
+                  color:
+                      WpyTheme.of(context).get(WpyColorKey.oldThirdActionColor),
                 ),
                 SizedBox(width: 3),
-                Text('通知', style: TextUtil.base.bold.noLine.sp(18).oldThirdAction(context))
+                Text('通知',
+                    style: TextUtil.base.bold.noLine
+                        .sp(18)
+                        .oldThirdAction(context))
               ],
             ),
             SizedBox(height: 10),
             Text(
                 '应学校要求，校外使用教育教学信息管理系统需先登录天津大学VPN，'
                 '故在校外访问微北洋课表、GPA功能也需登录VPN绑定办公网账号后使用。',
-                style: TextUtil.base.regular.noLine.sp(14).oldThirdAction(context)),
+                style: TextUtil.base.regular.noLine
+                    .sp(14)
+                    .oldThirdAction(context)),
             SizedBox(height: 15),
-            Divider(height: 1, color: WpyTheme.of(context).get(WpyColorKey.lightBorderColor)),
+            Divider(
+                height: 1,
+                color: WpyTheme.of(context).get(WpyColorKey.lightBorderColor)),
             WButton(
               onPressed: () => Navigator.pop(context),
               child: Container(
                 decoration: BoxDecoration(),
                 padding: const EdgeInsets.all(12),
                 child: Text('确定',
-                    style: TextUtil.base.bold.noLine.sp(16).oldThirdAction(context)),
+                    style: TextUtil.base.bold.noLine
+                        .sp(16)
+                        .oldThirdAction(context)),
               ),
             ),
           ],

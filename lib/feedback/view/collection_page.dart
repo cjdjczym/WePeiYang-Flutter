@@ -162,7 +162,7 @@ class _CollectionPageState extends State<CollectionPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor:
-        WpyTheme.of(context).get(WpyColorKey.secondaryBackgroundColor),
+            WpyTheme.of(context).get(WpyColorKey.secondaryBackgroundColor),
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_ios_rounded,

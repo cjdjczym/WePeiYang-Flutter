@@ -55,8 +55,7 @@ class _PhoneBindPageState extends State<PhoneBindPage> {
       return Column(children: [
         SizedBox(height: 70),
         Center(
-          child: Text(
-              "${'已绑定号码'}: ${CommonPreferences.phone.value}",
+          child: Text("${'已绑定号码'}: ${CommonPreferences.phone.value}",
               style: TextUtil.base.bold.sp(15).oldSecondaryAction(context)),
         ),
         SizedBox(height: 95),
@@ -128,7 +127,8 @@ class _PhoneBindPageState extends State<PhoneBindPage> {
                         hintText: '短信验证码',
                         hintStyle: hintStyle,
                         filled: true,
-                        fillColor: WpyTheme.of(context).get(WpyColorKey.oldSwitchBarColor),
+                        fillColor: WpyTheme.of(context)
+                            .get(WpyColorKey.oldSwitchBarColor),
                         isCollapsed: true,
                         contentPadding:
                             const EdgeInsets.fromLTRB(15, 18, 0, 18),
@@ -161,9 +161,11 @@ class _PhoneBindPageState extends State<PhoneBindPage> {
                               style: ButtonStyle(
                                 elevation: MaterialStateProperty.all(5),
                                 overlayColor: MaterialStateProperty.all(
-                                    WpyTheme.of(context).get(WpyColorKey.oldHintColor)),
+                                    WpyTheme.of(context)
+                                        .get(WpyColorKey.oldHintColor)),
                                 backgroundColor: MaterialStateProperty.all(
-                                    WpyTheme.of(context).get(WpyColorKey.oldHintColor)),
+                                    WpyTheme.of(context)
+                                        .get(WpyColorKey.oldHintColor)),
                                 shape: MaterialStateProperty.all(
                                   RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(30)),
@@ -245,8 +247,7 @@ class _PhoneBindPageState extends State<PhoneBindPage> {
             padding: const EdgeInsets.only(left: 15),
             child: WButton(
                 child: Icon(Icons.arrow_back,
-                    color:
-                        WpyTheme.of(context).get(WpyColorKey.oldActionColor),
+                    color: WpyTheme.of(context).get(WpyColorKey.oldActionColor),
                     size: 32),
                 onPressed: () => Navigator.pop(context)),
           )),
@@ -263,9 +264,7 @@ class _PhoneBindPageState extends State<PhoneBindPage> {
               Container(
                 margin: const EdgeInsets.fromLTRB(0, 32, 0, 20),
                 child: Text(
-                    (CommonPreferences.phone.value != "")
-                        ? '已绑定'
-                        : '未绑定',
+                    (CommonPreferences.phone.value != "") ? '已绑定' : '未绑定',
                     style: TextUtil.base.bold.unlabeled(context).sp(12)),
               ),
             ],

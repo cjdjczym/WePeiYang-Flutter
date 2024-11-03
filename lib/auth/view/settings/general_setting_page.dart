@@ -412,11 +412,9 @@ class _GeneralSettingPageState extends State<GeneralSettingPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('开启夜猫子模式',
-                              style: mainTextStyle),
+                          Text('开启夜猫子模式', style: mainTextStyle),
                           SizedBox(height: 3.h),
-                          Text('晚上9:00以后首页课表将展示第二天课程安排',
-                              style: hintTextStyle)
+                          Text('晚上9:00以后首页课表将展示第二天课程安排', style: hintTextStyle)
                         ],
                       ),
                     ),
@@ -456,27 +454,25 @@ class _GeneralSettingPageState extends State<GeneralSettingPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('实验课显示详细内容',
-                              style: mainTextStyle),
+                          Text('实验课显示详细内容', style: mainTextStyle),
                           SizedBox(height: 3.h),
-                          Text('若开启时遇到课表显示问题，可在此处关闭',
-                              style: hintTextStyle)
+                          Text('若开启时遇到课表显示问题，可在此处关闭', style: hintTextStyle)
                         ],
                       ),
                     ),
                     Switch(
                       value: CommonPreferences.isShowExperiment.value,
                       onChanged: (value) {
-                        setState(
-                                () => CommonPreferences.isShowExperiment.value = value);
+                        setState(() =>
+                            CommonPreferences.isShowExperiment.value = value);
                         Provider.of<CourseDisplayProvider>(context,
-                            listen: false)
+                                listen: false)
                             .showExperiment = value;
                       },
                       activeColor: WpyTheme.of(context)
                           .get(WpyColorKey.oldSecondaryActionColor),
                       inactiveThumbColor:
-                      WpyTheme.of(context).get(WpyColorKey.oldHintColor),
+                          WpyTheme.of(context).get(WpyColorKey.oldHintColor),
                       activeTrackColor: WpyTheme.of(context)
                           .get(WpyColorKey.oldSwitchBarColor),
                       inactiveTrackColor: WpyTheme.of(context)
@@ -504,8 +500,7 @@ class _GeneralSettingPageState extends State<GeneralSettingPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('每周显示天数',
-                                style: mainTextStyle),
+                            Text('每周显示天数', style: mainTextStyle),
                             SizedBox(height: 5.h),
                             Text('${CommonPreferences.dayNumber.value}',
                                 style: hintTextStyle)

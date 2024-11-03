@@ -16,7 +16,7 @@ class UpdateTitle extends StatelessWidget {
     final title = Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-         Text(
+        Text(
           "版本更新",
           style: TextUtil.base.w600.sp(17),
         ),

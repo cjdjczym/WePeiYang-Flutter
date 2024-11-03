@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:we_pei_yang_flutter/feedback/feedback_router.dart';
 import 'package:we_pei_yang_flutter/feedback/view/image_view/image_view_page.dart';
-import '../../../../../commons/environment/config.dart';
-import '../../../../../commons/themes/template/wpy_theme_data.dart';
-import '../../../../../commons/themes/wpy_theme.dart';
-import '../../../../../commons/widgets/wpy_pic.dart';
+import '../../../commons/environment/config.dart';
+import '../../../commons/themes/template/wpy_theme_data.dart';
+import '../../../commons/themes/wpy_theme.dart';
+import '../../../commons/widgets/wpy_pic.dart';
 
 final String picBaseUrl = '${EnvConfig.QNHDPIC}download/';
 final radius = 4.r;

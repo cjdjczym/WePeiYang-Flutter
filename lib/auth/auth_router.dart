@@ -55,7 +55,7 @@ class AuthRouter {
   static String scheduleSetting = 'setting/schedule_setting';
   static String themeSetting = "setting/theme_setting";
   static String debugInfo = "setting/debug_info";
-  static String toolbarManage= "setting/toolbar_manage";
+  static String toolbarManage = "setting/toolbar_manage";
 
   static String mailbox = "user/mailbox";
   static String aboutTwt = "user/about_twt";
@@ -98,6 +98,6 @@ class AuthRouter {
     debug: (_) => DebugPage(),
     themeSetting: (_) => ThemeSetting(),
     debugInfo: (_) => DebugInfoPage(),
-    toolbarManage:(_)=>ToolbarManagePage(),
+    toolbarManage: (_) => ToolbarManagePage(),
   };
 }

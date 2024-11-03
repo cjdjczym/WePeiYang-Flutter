@@ -62,7 +62,6 @@ void main() async {
       print('[INFO]: This device isn\'t support high refresh rate');
     }
 
-
     /// 设置桌面端窗口适配, 依赖为 window_manager
     if (Platform.isWindows) {
       await windowManager.ensureInitialized();
@@ -193,7 +192,7 @@ class IntentEvent {
   static const NoSuchEvent = -1;
 }
 
-class  WePeiYangApp extends StatefulWidget {
+class WePeiYangApp extends StatefulWidget {
   static late double screenWidth;
   static late double screenHeight;
 
@@ -477,7 +476,6 @@ class _StartUpWidgetState extends State<StartUpWidget> {
   }
 
   void _appInitProcess(BuildContext context) {
-
     // 检查更新
     context.read<UpdateManager>().checkUpdate();
 

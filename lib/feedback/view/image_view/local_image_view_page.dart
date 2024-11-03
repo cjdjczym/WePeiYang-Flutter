@@ -67,8 +67,8 @@ class _LocalImageViewPageState extends State<LocalImageViewPage> {
           scrollDirection: Axis.horizontal,
           itemCount: widget.args.uriListLength,
           backgroundDecoration: BoxDecoration(
-              color: WpyTheme.of(context)
-                  .get(WpyColorKey.reverseBackgroundColor)),
+              color:
+                  WpyTheme.of(context).get(WpyColorKey.reverseBackgroundColor)),
           pageController: PageController(
             initialPage: widget.args.indexNow,
           ),

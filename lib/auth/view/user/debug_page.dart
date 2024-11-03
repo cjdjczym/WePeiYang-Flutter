@@ -11,7 +11,8 @@ class DebugPage extends StatelessWidget {
       appBar: AppBar(
           title: Text("日志页面"),
           centerTitle: true,
-          backgroundColor: WpyTheme.of(context).get(WpyColorKey.oldSecondaryActionColor)),
+          backgroundColor:
+              WpyTheme.of(context).get(WpyColorKey.oldSecondaryActionColor)),
       body: ListView.builder(
           padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 15),
           itemCount: list.length,

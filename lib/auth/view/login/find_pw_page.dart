@@ -132,7 +132,8 @@ class _FindPwByPhoneWidgetState extends State<FindPwByPhoneWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle _hintStyle = TextUtil.base.regular.sp(13).oldHintDarker(context);
+    final TextStyle _hintStyle =
+        TextUtil.base.regular.sp(13).oldHintDarker(context);
     double width = WePeiYangApp.screenWidth - 80;
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -165,7 +166,8 @@ class _FindPwByPhoneWidgetState extends State<FindPwByPhoneWidget> {
                     hintText: '手机号',
                     hintStyle: _hintStyle,
                     filled: true,
-                    fillColor: WpyTheme.of(context).get(WpyColorKey.oldSwitchBarColor),
+                    fillColor:
+                        WpyTheme.of(context).get(WpyColorKey.oldSwitchBarColor),
                     isCollapsed: true,
                     contentPadding: const EdgeInsets.fromLTRB(15, 18, 0, 18),
                     border: OutlineInputBorder(
@@ -187,7 +189,8 @@ class _FindPwByPhoneWidgetState extends State<FindPwByPhoneWidget> {
                         hintText: '短信验证码',
                         hintStyle: _hintStyle,
                         filled: true,
-                        fillColor: WpyTheme.of(context).get(WpyColorKey.oldSwitchBarColor),
+                        fillColor: WpyTheme.of(context)
+                            .get(WpyColorKey.oldSwitchBarColor),
                         isCollapsed: true,
                         contentPadding:
                             const EdgeInsets.fromLTRB(15, 18, 0, 18),
@@ -220,9 +223,11 @@ class _FindPwByPhoneWidgetState extends State<FindPwByPhoneWidget> {
                                 style: ButtonStyle(
                                   elevation: MaterialStateProperty.all(5),
                                   overlayColor: MaterialStateProperty.all(
-                                      WpyTheme.of(context).get(WpyColorKey.oldHintColor)),
+                                      WpyTheme.of(context)
+                                          .get(WpyColorKey.oldHintColor)),
                                   backgroundColor: MaterialStateProperty.all(
-                                      WpyTheme.of(context).get(WpyColorKey.oldHintColor)),
+                                      WpyTheme.of(context)
+                                          .get(WpyColorKey.oldHintColor)),
                                   shape: MaterialStateProperty.all(
                                       RoundedRectangleBorder(
                                           borderRadius:

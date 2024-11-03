@@ -55,8 +55,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-          title: Text('密码更改',
-              style: TextUtil.base.bold.sp(16).blue52hz(context)),
+          title:
+              Text('密码更改', style: TextUtil.base.bold.sp(16).blue52hz(context)),
           elevation: 0,
           centerTitle: true,
           backgroundColor:

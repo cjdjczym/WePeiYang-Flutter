@@ -44,8 +44,7 @@ class FindPwDialog extends Dialog {
                 alignment: Alignment.topRight,
                 padding: const EdgeInsets.fromLTRB(0, 15, 10, 0),
                 child: Icon(Icons.close,
-                    color:
-                        WpyTheme.of(context).get(WpyColorKey.oldActionColor),
+                    color: WpyTheme.of(context).get(WpyColorKey.oldActionColor),
                     size: 25),
               ),
             )

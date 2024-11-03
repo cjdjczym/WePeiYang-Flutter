@@ -569,15 +569,12 @@ class _HomeErrorContainerState extends State<HomeErrorContainer>
   late final AnimationController controller;
   late final Animation<double> animation;
 
-  late final FbDepartmentsProvider _tagsProvider;
-
   @override
   void initState() {
     super.initState();
     controller =
         AnimationController(duration: const Duration(seconds: 1), vsync: this);
     animation = CurveTween(curve: Curves.easeInOutCubic).animate(controller);
-    _tagsProvider = Provider.of<FbDepartmentsProvider>(context, listen: false);
   }
 
   @override

@@ -66,8 +66,8 @@ class GPACourse {
   double credit; // 课程学分
   double gpa; // 课程绩点
 
-  GPACourse(this.semester, this.name, this.classType, this.score, this.rawScore, this.credit,
-      this.gpa);
+  GPACourse(this.semester, this.name, this.classType, this.score, this.rawScore,
+      this.credit, this.gpa);
 
   GPACourse.fromJson(Map<String, dynamic> map)
       : semester = map['semester'],

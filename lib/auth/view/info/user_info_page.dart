@@ -118,10 +118,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
                     children: [
                       Text('办公网', style: mainTextStyle),
                       Spacer(),
-                      Text(
-                          CommonPreferences.isBindTju.value
-                              ? '已绑定'
-                              : '未绑定',
+                      Text(CommonPreferences.isBindTju.value ? '已绑定' : '未绑定',
                           style: hintTextStyle),
                       SizedBox(width: 10.w),
                       arrow,
@@ -142,8 +139,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text('密码更改',
-                            style: mainTextStyle),
+                        child: Text('密码更改', style: mainTextStyle),
                       ),
                       arrow,
                       SizedBox(width: 15.w)
@@ -194,9 +190,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
                       Text('电话', style: mainTextStyle),
                       Spacer(),
                       Text(
-                          (CommonPreferences.phone.value != "")
-                              ? '已绑定'
-                              : '未绑定',
+                          (CommonPreferences.phone.value != "") ? '已绑定' : '未绑定',
                           style: hintTextStyle),
                       SizedBox(width: 10.w),
                       arrow,
@@ -220,9 +214,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
                       Text('邮箱', style: mainTextStyle),
                       Spacer(),
                       Text(
-                          (CommonPreferences.email.value != "")
-                              ? '已绑定'
-                              : '未绑定',
+                          (CommonPreferences.email.value != "") ? '已绑定' : '未绑定',
                           style: hintTextStyle),
                       SizedBox(width: 10.w),
                       arrow,

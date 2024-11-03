@@ -72,8 +72,7 @@ class _SearchPageState extends State<SearchPage> {
           Navigator.pushNamed(
             context,
             FeedbackRouter.searchResult,
-            arguments: SearchResultPageArgs(
-                text, '', '', '搜索结果', 0, 0),
+            arguments: SearchResultPageArgs(text, '', '', '搜索结果', 0, 0),
           ).then((_) {
             Navigator.pop(context);
           });
@@ -144,12 +143,7 @@ class _SearchPageState extends State<SearchPage> {
           list.length,
           (index) {
             var searchArgument = SearchResultPageArgs(
-                list[list.length - index - 1],
-                '',
-                '',
-                '搜索结果',
-                0,
-                0);
+                list[list.length - index - 1], '', '', '搜索结果', 0, 0);
             return InkResponse(
               radius: 30,
               highlightColor: Colors.transparent,

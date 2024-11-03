@@ -204,12 +204,14 @@ class _LostAndFoundPostPageState extends State<LostAndFoundPostPage> {
                         InputLocationField(typeNotifier: typeNotifier),
                         SizedBox(height: 14.h),
                         InputPhoneField()
+
                         ///phone为什么没有notifier
                       ],
                     )),
                 Padding(
                   padding: EdgeInsets.only(top: 25.h),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                  child:
+                      Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                     CategorySelector(),
                     SizedBox(width: 30.w),
                     Hero(
@@ -223,12 +225,14 @@ class _LostAndFoundPostPageState extends State<LostAndFoundPostPage> {
                                   EdgeInsets.fromLTRB(25.w, 5.h, 25.w, 5.h)),
                               shape: MaterialStateProperty.all(
                                   RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20.r)))),
+                                      borderRadius:
+                                          BorderRadius.circular(20.r)))),
                           onPressed: () async {
                             if (tapAble) {
                               tapAble = false;
                               await _submit();
-                              await Future.delayed(Duration(milliseconds: 3000));
+                              await Future.delayed(
+                                  Duration(milliseconds: 3000));
                               tapAble = true;
                             }
                           },
@@ -650,7 +654,8 @@ class _SelectDateFieldState extends State<SelectDateField> {
                   Icon(
                     Icons.access_time_outlined,
                     color: selectedDate != null
-                        ? WpyTheme.of(context).get(WpyColorKey.primaryActionColor)
+                        ? WpyTheme.of(context)
+                            .get(WpyColorKey.primaryActionColor)
                         : WpyTheme.of(context).get(WpyColorKey.infoTextColor),
                   ),
                   Container(
@@ -844,18 +849,14 @@ class _InputPhoneFieldState extends State<InputPhoneField> {
         decoration: BoxDecoration(
             color: WpyTheme.of(context).get(WpyColorKey.oldSwitchBarColor),
             borderRadius: BorderRadius.circular(16.r)),
-        child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
           Icon(
-          Icons.local_phone_outlined,
-          color: isFilled || isFocused
-              ? WpyTheme.of(context).get(WpyColorKey.primaryActionColor)
-              : WpyTheme.of(context).get(WpyColorKey.infoTextColor),
-        ),
-          Container(
-            width: 100.w,
-              child: inputField)
+            Icons.local_phone_outlined,
+            color: isFilled || isFocused
+                ? WpyTheme.of(context).get(WpyColorKey.primaryActionColor)
+                : WpyTheme.of(context).get(WpyColorKey.infoTextColor),
+          ),
+          Container(width: 100.w, child: inputField)
         ]));
   }
 }

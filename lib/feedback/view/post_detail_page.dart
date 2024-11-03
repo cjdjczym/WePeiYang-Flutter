@@ -28,11 +28,10 @@ import 'package:we_pei_yang_flutter/feedback/view/image_view/local_image_view_pa
 import 'package:we_pei_yang_flutter/feedback/view/report_question_page.dart';
 import 'package:we_pei_yang_flutter/main.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
-
-import '../../commons/themes/template/wpy_theme_data.dart';
-import '../../commons/themes/wpy_theme.dart';
-import '../../commons/widgets/w_button.dart';
-import '../../schedule/page/course_page.dart';
+import 'package:we_pei_yang_flutter/commons/themes/template/wpy_theme_data.dart';
+import 'package:we_pei_yang_flutter/commons/themes/wpy_theme.dart';
+import 'package:we_pei_yang_flutter/commons/widgets/w_button.dart';
+import 'package:we_pei_yang_flutter/schedule/page/course_page.dart';
 import 'components/official_comment_card.dart';
 import 'components/post_card.dart';
 import 'lake_home_page/lake_notifier.dart';

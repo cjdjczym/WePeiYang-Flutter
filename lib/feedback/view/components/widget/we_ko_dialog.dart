@@ -29,7 +29,8 @@ class WeKoDialog extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 30),
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              color: WpyTheme.of(context).get(WpyColorKey.secondaryBackgroundColor)),
+              color: WpyTheme.of(context)
+                  .get(WpyColorKey.secondaryBackgroundColor)),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -37,7 +38,8 @@ class WeKoDialog extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 50),
                 child: Text('有人给你分享了微口令!',
-                    style: TextUtil.base.label(context).regular.sp(16).NotoSansSC),
+                    style:
+                        TextUtil.base.label(context).regular.sp(16).NotoSansSC),
               ),
               Padding(
                 padding: const EdgeInsets.all(20),
@@ -55,7 +57,8 @@ class WeKoDialog extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
                 child: Text(
                   post.content,
-                  style: TextUtil.base.infoText(context).regular.sp(14).NotoSansSC,
+                  style:
+                      TextUtil.base.infoText(context).regular.sp(14).NotoSansSC,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -67,11 +70,14 @@ class WeKoDialog extends StatelessWidget {
                   overlayColor:
                       MaterialStateProperty.resolveWith<Color>((states) {
                     if (states.contains(MaterialState.pressed))
-                      return WpyTheme.of(context).get(WpyColorKey.oldSecondaryActionColor);
-                    return WpyTheme.of(context).get(WpyColorKey.secondaryBackgroundColor);
+                      return WpyTheme.of(context)
+                          .get(WpyColorKey.oldSecondaryActionColor);
+                    return WpyTheme.of(context)
+                        .get(WpyColorKey.secondaryBackgroundColor);
                   }),
                   backgroundColor: MaterialStateProperty.all(
-                      WpyTheme.of(context).get(WpyColorKey.secondaryBackgroundColor)),
+                      WpyTheme.of(context)
+                          .get(WpyColorKey.secondaryBackgroundColor)),
                   shape: MaterialStateProperty.all(RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10))),
                 ),
@@ -79,7 +85,8 @@ class WeKoDialog extends StatelessWidget {
                   margin: const EdgeInsets.all(7),
                   child: Text(
                     '查看详情',
-                    style: TextUtil.base.label(context).regular.sp(16).NotoSansSC,
+                    style:
+                        TextUtil.base.label(context).regular.sp(16).NotoSansSC,
                   ),
                 ),
               ),
