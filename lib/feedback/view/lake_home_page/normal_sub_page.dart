@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:we_pei_yang_flutter/commons/preferences/common_prefs.dart';
 import 'package:we_pei_yang_flutter/commons/token/lake_token_manager.dart';
 import 'package:we_pei_yang_flutter/commons/util/router_manager.dart';
@@ -35,7 +36,6 @@ class NSubPage extends StatefulWidget {
 
 class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   int index;
-  double _previousOffset = 0;
 
   bool get needHorizontalView => 1.sw > 1.sh;
 
@@ -56,7 +56,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
         LakeUtil.lakePageControllers[index]!.refreshController;
     final pixels = scrollInfo.metrics.pixels;
     final maxScrollExtent = scrollInfo.metrics.maxScrollExtent;
-    final threshold = 12.h + FeedbackHomePageState().searchBarHeight;
+    final threshold = 12.h + FeedbackHomePageState.searchBarHeight;
 
     // Check for refresh idle state and feedback conditions
     if (refreshController.isRefresh && pixels >= 2) {
@@ -77,24 +77,32 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     return true;
   }
 
-  bool _shouldToggleFeedback(
-      ScrollNotification scrollInfo, double pixels, double maxScrollExtent) {
-    return scrollInfo.metrics.axisDirection == AxisDirection.down &&
-        (pixels - _previousOffset).abs() >= 20 &&
-        pixels >= 10 &&
-        pixels <= maxScrollExtent - 10;
-  }
+  Future<void> _onRefresh() async {
+    // 这里的逻辑是: 开始刷新-delay100ms-显示刷新动画-结束刷新
+    // 或者可能是:  开始刷新 - delay100ms - 显示刷新动画
+    //            - 刷新结束但动画还没开始（网太快了）
+    //            - 取消动画 （不播放了）-  结束刷新
 
-  Future<void> onRefresh({bool retry = true}) async {
+    // 延迟100ms显示刷新动画
+    final task = Timer(Duration(milliseconds: 280), () {
+      setState(() {
+        isRefresh = true;
+      });
+    });
+    // 刷新
     try {
       _initializeHotTagsIfNeeded();
       getRecTag();
-
       await _refreshPostList();
-      _initializeAdditionalProviders();
+      _initializeLakeArea();
     } catch (e) {
       await _handleRefreshError();
     }
+    // 如果还没执行就不执行了
+    if (task.isActive) task.cancel();
+    setState(() {
+      isRefresh = false;
+    });
   }
 
   void _initializeHotTagsIfNeeded() {
@@ -123,7 +131,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
 
   Future<void> _handleRefreshError() async {
     await LakeTokenManager().refreshToken();
-    onRefresh(retry: true);
+    _onRefresh();
     ToastProvider.error("发生未知错误");
     pageController.refreshController.refreshFailed();
   }
@@ -178,12 +186,16 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   bool get wantKeepAlive => true;
 
   Widget _buildErrorPage() {
-    return const Placeholder();
+    return const Placeholder(
+      child: Text("Error"),
+    );
   }
 
   Widget _buildLoadingPage() {
-    return const Placeholder();
+    return const RefreshSkeleton();
   }
+
+  bool isRefresh = false;
 
   @override
   Widget build(BuildContext context) {
@@ -205,8 +217,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
             return NotificationListener<ScrollNotification>(
               child: SmartRefresher(
                 physics: BouncingScrollPhysics(),
-                controller:
-                    LakeUtil.lakePageControllers[index]!.refreshController,
+                controller: pageController.refreshController,
                 header: ClassicHeader(
                   height: 5.h,
                   completeDuration: Duration(milliseconds: 300),
@@ -218,7 +229,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
                 ),
                 cacheExtent: 11,
                 enablePullDown: true,
-                onRefresh: onRefresh,
+                onRefresh: _onRefresh,
                 footer: ClassicFooter(
                   idleText: '下拉以刷新',
                   noDataText: '无数据',
@@ -227,96 +238,269 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
                 ),
                 enablePullUp: true,
                 onLoading: _onLoading,
-                child: ListenableBuilder(
-                    listenable: pageController.postHolder,
-                    builder: (context, child) {
-                      return ListView.builder(
-                        controller: LakeUtil
-                            .lakePageControllers[index]!.scrollController,
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: pageController.postHolder.posts.length + 2,
-                        itemBuilder: (context, ind) {
-                          if (ind == 0) return AnnouncementBannerWidget();
-                          ind--;
-                          if (ind == 0)
-                            return index == 0
-                                ? HotCard()
-                                : SizedBox(height: 10.h);
-                          ind--;
-                          if (ind == 0) return AdCardWidget();
-                          ind--;
-                          if (ind == 0)
-                            return Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  WButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        LakeUtil.sortSeq.value = 1;
-                                        listToTop();
-                                      });
-                                    },
-                                    child: Padding(
-                                      padding: EdgeInsets.fromLTRB(
-                                          20.w, 14.h, 5.w, 6.h),
-                                      child: ValueListenableBuilder(
-                                        valueListenable: LakeUtil.sortSeq,
-                                        builder: (context, sortSeq, _) {
-                                          return Text('默认排序',
-                                              style: sortSeq != 0
-                                                  ? TextUtil.base
-                                                      .primaryAction(context)
-                                                      .w600
-                                                      .sp(14)
-                                                  : TextUtil.base
-                                                      .label(context)
-                                                      .w400
-                                                      .sp(14));
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                  WButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        LakeUtil.sortSeq.value = 0;
-                                        listToTop();
-                                      });
-                                    },
-                                    child: Padding(
-                                      padding: EdgeInsets.fromLTRB(
-                                          5.w, 14.h, 10.w, 6.h),
-                                      child: ValueListenableBuilder(
-                                          valueListenable: LakeUtil.sortSeq,
-                                          builder: (context, sortSeq, _) {
-                                            return Text('最新发帖',
-                                                style: sortSeq != 0
-                                                    ? TextUtil.base
-                                                        .label(context)
-                                                        .w400
-                                                        .sp(14)
-                                                    : TextUtil.base
-                                                        .primaryAction(context)
-                                                        .w600
-                                                        .sp(14));
-                                          }),
-                                    ),
-                                  ),
-                                ]);
-                          ind--;
-                          final post = pageController.postHolder.posts.values
-                              .toList()[ind];
-                          return PostCardNormal(post);
-                        },
-                      );
-                    }),
+                child: AnimatedSwitcher(
+                  duration: Duration(milliseconds: 300),
+                  child: isRefresh
+                      ? _buildLoadingPage()
+                      : ListenableBuilder(
+                          // 这里是Post的Listview, 需要监听Post刷新
+                          listenable: pageController.postHolder,
+                          builder: (context, child) {
+                            return ListView.builder(
+                              controller: pageController.scrollController,
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount:
+                                  pageController.postHolder.posts.length + 2,
+                              itemBuilder: (context, ind) {
+                                if (ind == 0) return AnnouncementBannerWidget();
+                                ind--;
+                                if (ind == 0)
+                                  return index == 0
+                                      ? HotCard()
+                                      : SizedBox(height: 10.h);
+                                ind--;
+                                if (ind == 0) return AdCardWidget();
+                                ind--;
+                                if (ind == 0)
+                                  return Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        WButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              LakeUtil.sortSeq.value = 1;
+                                              listToTop();
+                                            });
+                                          },
+                                          child: Padding(
+                                            padding: EdgeInsets.fromLTRB(
+                                                20.w, 14.h, 5.w, 6.h),
+                                            child: ValueListenableBuilder(
+                                              valueListenable: LakeUtil.sortSeq,
+                                              builder: (context, sortSeq, _) {
+                                                return Text('默认排序',
+                                                    style: sortSeq != 0
+                                                        ? TextUtil.base
+                                                            .primaryAction(
+                                                                context)
+                                                            .w600
+                                                            .sp(14)
+                                                        : TextUtil.base
+                                                            .label(context)
+                                                            .w400
+                                                            .sp(14));
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                        WButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              LakeUtil.sortSeq.value = 0;
+                                              listToTop();
+                                            });
+                                          },
+                                          child: Padding(
+                                            padding: EdgeInsets.fromLTRB(
+                                                5.w, 14.h, 10.w, 6.h),
+                                            child: ValueListenableBuilder(
+                                                valueListenable:
+                                                    LakeUtil.sortSeq,
+                                                builder: (context, sortSeq, _) {
+                                                  return Text('最新发帖',
+                                                      style: sortSeq != 0
+                                                          ? TextUtil.base
+                                                              .label(context)
+                                                              .w400
+                                                              .sp(14)
+                                                          : TextUtil.base
+                                                              .primaryAction(
+                                                                  context)
+                                                              .w600
+                                                              .sp(14));
+                                                }),
+                                          ),
+                                        ),
+                                      ]);
+                                ind--;
+                                final post = pageController
+                                    .postHolder.posts.values
+                                    .toList()[ind];
+                                return PostCardNormal(post);
+                              },
+                            );
+                          }),
+                ),
               ),
               onNotification: (ScrollNotification scrollInfo) =>
                   _onScrollNotification(scrollInfo),
             );
           }),
     );
+  }
+}
+
+class RefreshSkeleton extends StatelessWidget {
+  const RefreshSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      physics: NeverScrollableScrollPhysics(),
+      children: [
+        AnnouncementBannerWidget(),
+        BannerSkeleton(),
+        for (int i = 0; i < 5; i++) PostSkeleton(),
+      ],
+    );
+  }
+}
+
+class PostSkeleton extends StatelessWidget {
+  const PostSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final base = WpyTheme.of(context).get(WpyColorKey.infoTextColor);
+    final highlight =
+        WpyTheme.of(context).get(WpyColorKey.secondaryInfoTextColor);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Shimmer.fromColors(
+                child: Container(
+                  height: 32,
+                  width: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.black12,
+                  ),
+                ),
+                baseColor: base,
+                highlightColor: highlight,
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Shimmer.fromColors(
+                      child: Container(
+                        height: 15,
+                        margin: EdgeInsets.symmetric(vertical: 2),
+                        width: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(4)),
+                          color: Colors.black12,
+                        ),
+                      ),
+                      baseColor: base,
+                      highlightColor: highlight,
+                    ),
+                    Shimmer.fromColors(
+                      child: Container(
+                        height: 8,
+                        margin: EdgeInsets.symmetric(vertical: 2),
+                        width: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(2)),
+                          color: Colors.black12,
+                        ),
+                      ),
+                      baseColor: base,
+                      highlightColor: highlight,
+                    ),
+                  ],
+                ),
+              ),
+              Shimmer.fromColors(
+                child: Container(
+                  height: 10,
+                  margin: EdgeInsets.symmetric(vertical: 2),
+                  width: 80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(4)),
+                    color: Colors.black12,
+                  ),
+                ),
+                baseColor: base,
+                highlightColor: highlight,
+              ),
+            ],
+          ),
+          SizedBox(height: 10),
+          for (int i = 1; i <= 3; i++) ...[
+            Shimmer.fromColors(
+              child: Container(
+                height: 18,
+                margin: EdgeInsets.symmetric(vertical: 2),
+                width: i == 3 ? 150 : double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(4)),
+                  color: Colors.black12,
+                ),
+              ),
+              baseColor: base,
+              highlightColor: highlight,
+            ),
+            SizedBox(height: 5),
+          ]
+        ],
+      ),
+    );
+  }
+}
+
+class WelcomeSkeleton extends StatelessWidget {
+  const WelcomeSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+        child: Container(
+          height: 35.h,
+          margin: EdgeInsets.only(
+              // top: FeedbackHomePageState.searchBarHeight,
+              left: 14.w,
+              right: 14.w),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(100)),
+            color: Colors.black12, // 写死Color, 这个在什么模式都调教的比较好看
+          ),
+        ),
+        period: Duration(milliseconds: 1000),
+        baseColor: WpyTheme.of(context).get(WpyColorKey.infoTextColor),
+        highlightColor:
+            WpyTheme.of(context).get(WpyColorKey.secondaryInfoTextColor));
+  }
+}
+
+class BannerSkeleton extends StatelessWidget {
+  const BannerSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+            color: Colors.black12,
+          ),
+          margin: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 0),
+          height: 0.32 * WePeiYangApp.screenWidth,
+          width: double.infinity,
+        ),
+        period: Duration(milliseconds: 1000),
+        baseColor: WpyTheme.of(context).get(WpyColorKey.infoTextColor),
+        highlightColor:
+            WpyTheme.of(context).get(WpyColorKey.secondaryInfoTextColor));
   }
 }
 
@@ -595,7 +779,7 @@ class AnnouncementBannerWidget extends StatelessWidget {
     return Container(
       height: 35.h,
       margin: EdgeInsets.only(
-          top: 12.h + FeedbackHomePageState().searchBarHeight,
+          top: FeedbackHomePageState.searchBarHeight / 2,
           left: 14.w,
           right: 14.w),
       padding: EdgeInsets.symmetric(vertical: 2),

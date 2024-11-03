@@ -133,9 +133,9 @@ class LakeUtil {
   static Future<void> initPostList(int index) async {
     final result = await FeedbackService.getPosts(
         type: '$index',
-        searchMode: sortSeq,
+        searchMode: sortSeq.value,
         page: '1',
-        etag: index == 0 ? 'recommend' : '');
+        eTag: index == 0 ? 'recommend' : '');
     final postList = result.item1;
 
     final controller = LakeUtil.lakePageControllers[index]!;
@@ -147,8 +147,8 @@ class LakeUtil {
   static Future<void> getNextPage(int index) async {
     final result = await FeedbackService.getPosts(
       type: '${index}',
-      searchMode: sortSeq,
-      etag: index == 0 ? 'recommend' : '',
+      searchMode: sortSeq.value,
+      eTag: index == 0 ? 'recommend' : '',
       page: LakeUtil.lakePageControllers[index]!.currentPage.value + 1,
     );
     final postList = result.item1;

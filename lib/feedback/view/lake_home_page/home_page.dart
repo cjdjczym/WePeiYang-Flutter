@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:extended_tabs/extended_tabs.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -47,7 +46,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   bool showFBDropdown = false;
 
   /// 42.h
-  double get searchBarHeight => 42.h;
+  static double get searchBarHeight => 42.h;
 
   /// 46.h
   double get tabBarHeight => 46.h;
@@ -99,11 +98,6 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   }
 
   // 展开/收起校务筛选框
-  _toggleFeedbackDropdown() {
-    setState(() {
-      showFBDropdown = !showFBDropdown;
-    });
-  }
 
   TabController? tabController;
 

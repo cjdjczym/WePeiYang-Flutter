@@ -322,7 +322,7 @@ class FeedbackService with AsyncTimer {
     departmentId,
     tagId,
     searchMode,
-    etag,
+    eTag,
     required type,
     required page,
   }) async {
@@ -331,7 +331,7 @@ class FeedbackService with AsyncTimer {
       queryParameters: {
         'type': '$type',
         'search_mode': searchMode ?? 0,
-        'etag': etag ?? '',
+        'etag': eTag ?? '',
         'content': keyword ?? '',
         'tag_id': tagId ?? '',
         'department_id': departmentId ?? '',
@@ -341,6 +341,7 @@ class FeedbackService with AsyncTimer {
         'page': '$page',
       },
     );
+
     List<Post> list = [];
     for (Map<String, dynamic> json in response.data['data']['list']) {
       list.add(Post.fromJson(json));
