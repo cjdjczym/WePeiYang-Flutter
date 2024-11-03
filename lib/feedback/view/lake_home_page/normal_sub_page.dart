@@ -104,6 +104,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     // 刷新
     try {
       _initializeHotTagsIfNeeded();
+      _initializeProviders();
       getRecTag();
       await _refreshPostList();
       _initializeLakeArea();
@@ -180,15 +181,13 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     super.initState();
     print("==> init state for tab $index");
     pageController = LakeUtil.lakePageControllers[index]!;
-    _initializeProvidersIfNeeded();
+    _initializeProviders();
     _initializeLakeArea();
   }
 
-  void _initializeProvidersIfNeeded() {
-    if (index == 0) {
-      _initializeAdditionalProviders();
-      context.read<FbHotTagsProvider>().initHotTags();
-    }
+  void _initializeProviders() {
+    _initializeAdditionalProviders();
+    context.read<FbHotTagsProvider>().initHotTags();
   }
 
   void _initializeLakeArea() {
@@ -199,8 +198,9 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   bool get wantKeepAlive => true;
 
   Widget _buildErrorPage() {
-    return const Placeholder(
-      child: Text("Error"),
+    return HomeErrorContainer(
+      onRetry: () => setState(() {}),
+      errorText: "网络状况不佳，请重试",
     );
   }
 
@@ -456,9 +456,7 @@ class PostSkeleton extends StatelessWidget {
               child: Container(
                 height: 18,
                 margin: EdgeInsets.symmetric(vertical: 2),
-                width: i == 3
-                    ? (150 + Random().nextDouble() * 50)
-                    : double.infinity,
+                width: i == 3 ? 150 : double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(4)),
                   color: Colors.black12,
@@ -521,6 +519,7 @@ class BannerSkeleton extends StatelessWidget {
   }
 }
 
+// 论坛首页的Banner
 class AdCardWidget extends StatelessWidget {
   const AdCardWidget({super.key});
 
@@ -533,162 +532,33 @@ class AdCardWidget extends StatelessWidget {
         duration: Duration(milliseconds: 300),
         child: _len > 0
             ? ActivityCard(1.sw - 40.w)
-            : Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(8.r)),
-                  color: WpyTheme.of(context)
-                      .get(WpyColorKey.primaryBackgroundColor),
+            : Shimmer.fromColors(
+                baseColor: WpyTheme.of(context).get(WpyColorKey.infoTextColor),
+                highlightColor: WpyTheme.of(context)
+                    .get(WpyColorKey.secondaryInfoTextColor),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(8.r)),
+                    color: Colors.black12,
+                  ),
+                  width: 1.sw - 40.w,
+                  height: (1.sw - 40.w) * 0.32,
                 ),
-                width: 1.sw - 40.w,
-                height: (1.sw - 40.w) * 0.32,
               ),
       ),
     );
   }
 }
 
-class LoadingPageWidget extends StatefulWidget {
-  final int index;
-  final void Function() onPressed;
-
-  LoadingPageWidget(this.index, this.onPressed);
-
-  @override
-  _LoadingPageWidgetState createState() => _LoadingPageWidgetState();
-}
-
-class _LoadingPageWidgetState extends State<LoadingPageWidget>
-    with SingleTickerProviderStateMixin {
-  bool isOpa = false;
-  bool showBtn = false;
-  late final Timer _timer;
-  int count = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    isOpa = true;
-    _timer = Timer.periodic(Duration(milliseconds: 200), (timer) {
-      count++;
-      if (isOpa)
-        isOpa = false;
-      else
-        isOpa = true;
-      if (count > 50) {
-        setState(() {
-          showBtn = true;
-        });
-        _timer.cancel();
-      }
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return showBtn
-        ? HomeErrorContainer(widget.onPressed, true, widget.index)
-        : Stack(
-            children: [
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: 8,
-                itemBuilder: (context, ind) {
-                  return Builder(builder: (context) {
-                    if (ind == 0)
-                      return Container(
-                        height: 35.h,
-                        margin:
-                            EdgeInsets.only(top: 14.h, left: 14.w, right: 14.w),
-                        padding: EdgeInsets.symmetric(vertical: 2),
-                        decoration: BoxDecoration(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(100)),
-                            color: WpyTheme.of(context)
-                                .get(WpyColorKey.primaryActionColor)
-                                .withAlpha(12)),
-                      );
-                    ind--;
-                    if (widget.index == 0 && ind == 0)
-                      return Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                            color: WpyTheme.of(context)
-                                .get(WpyColorKey.dislikeSecondary),
-                          ),
-                          margin: EdgeInsets.symmetric(
-                              horizontal: 20.w, vertical: 20.h),
-                          height: 160.h);
-                    if (widget.index != 0 && ind == 0)
-                      return SizedBox(height: 10.h);
-                    ind--;
-                    if (ind == 0 &&
-                        context.read<FestivalProvider>().nonePopupList.length >
-                            0)
-                      return Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                            color: WpyTheme.of(context)
-                                .get(WpyColorKey.dislikeSecondary),
-                          ),
-                          margin: EdgeInsets.fromLTRB(20.w, 0, 20.w, 0),
-                          height: 0.32 * WePeiYangApp.screenWidth);
-                    ind--;
-                    if (ind == 0) return SizedBox(height: 20.h);
-                    ind--;
-                    return Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                          color: WpyTheme.of(context)
-                              .get(WpyColorKey.dislikeSecondary),
-                        ),
-                        margin: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 0),
-                        height: 160.h);
-                  });
-                },
-              ),
-              AnimatedContainer(
-                duration: Duration(milliseconds: 200),
-                width: 1.sw,
-                height: 1.sh,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      if (isOpa)
-                        WpyTheme.of(context)
-                            .get(WpyColorKey.skeletonStartAColor)
-                      else
-                        WpyTheme.of(context)
-                            .get(WpyColorKey.skeletonStartBColor),
-                      if (!isOpa)
-                        WpyTheme.of(context).get(WpyColorKey.skeletonEndAColor)
-                      else
-                        WpyTheme.of(context).get(WpyColorKey.skeletonEndBColor),
-                    ],
-                  ),
-                ),
-                // child: Center(child: Loading())
-              )
-            ],
-          );
-  }
-}
-
+// 错误的猴子
 class HomeErrorContainer extends StatefulWidget {
-  final void Function() onPressed;
-  final bool networkFailPageUsage;
-  final int index;
+  final void Function() onRetry;
+  final String errorText;
 
-  HomeErrorContainer(this.onPressed, this.networkFailPageUsage, this.index);
+  HomeErrorContainer({
+    required this.onRetry,
+    required this.errorText,
+  });
 
   @override
   _HomeErrorContainerState createState() => _HomeErrorContainerState();
@@ -721,8 +591,7 @@ class _HomeErrorContainerState extends State<HomeErrorContainer>
     var errorImg = WpyPic('assets/images/lake_butt_icons/monkie.png',
         height: 160, width: 160);
 
-    var errorText = Text(
-        widget.networkFailPageUsage ? '错误！请重试' : '啊哦，没有找到相关消息... \n 要不然换一个试试？',
+    var errorText = Text(widget.errorText,
         style: TextUtil.base.label(context).NotoSansSC.w600.sp(16));
 
     var retryButton = FloatingActionButton(
@@ -736,37 +605,23 @@ class _HomeErrorContainerState extends State<HomeErrorContainer>
       backgroundColor:
           WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
       foregroundColor: WpyTheme.of(context).get(WpyColorKey.defaultActionColor),
-      onPressed: () async {
-        try {
-          await LakeTokenManager().refreshToken();
-          _tagsProvider.initDepartments();
-          await LakeUtil.initPostList(widget.index);
-          widget.onPressed.call();
-        } catch (e) {
-          controller.reset();
-          ToastProvider.error('刷新失败');
-        } finally {
-          if (!controller.isAnimating) {
-            controller.repeat();
-            widget.onPressed.call();
-          }
-        }
-      },
+      onPressed: widget.onRetry,
       mini: true,
     );
 
-    var paddingBox = SizedBox(height: WePeiYangApp.screenHeight / 8);
+    var paddingBox = SizedBox(height: WePeiYangApp.screenHeight / 16);
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          SizedBox(height: 120.h),
-          errorImg,
-          SizedBox(height: 20.h),
-          errorText,
-          paddingBox,
-          widget.networkFailPageUsage ? retryButton : SizedBox(),
-        ],
+    return Center(
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            errorImg,
+            SizedBox(height: 20.h),
+            errorText,
+            paddingBox,
+            retryButton
+          ],
+        ),
       ),
     );
   }

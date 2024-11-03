@@ -2,9 +2,12 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:extended_tabs/extended_tabs.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:we_pei_yang_flutter/commons/preferences/common_prefs.dart';
 import 'package:we_pei_yang_flutter/commons/token/lake_token_manager.dart';
@@ -81,14 +84,11 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   bool get wantKeepAlive => true;
 
   void listToTop() {
-    // 页面还没加载完成， 禁止调用滚动
+    // 页面还没加载完成， 无法滚动到顶部
     if (tabController == null) return;
-
-    print("==> listToTop");
 
     final controller = LakeUtil.currentController.scrollController;
 
-    print("==> controller.offset: ${controller.offset}");
     // 如果距离太大，直接跳转到1500， 防止动画太夸张
     if (controller.offset > 1500) {
       controller.jumpTo(1500.toDouble());
@@ -99,8 +99,6 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
       curve: Curves.easeOutCirc,
     );
   }
-
-  // 展开/收起校务筛选框
 
   TabController? tabController;
 
@@ -178,11 +176,79 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   }
 
   Widget _buildReloadPage() {
-    return Placeholder();
+    return HomeErrorContainer(
+      // 直接重新Load 这个Widget,重新来FutureBuilder的Future
+      onRetry: () => setState(() {}),
+      errorText: "完全没有网络，论坛加载失败",
+    );
   }
 
   Widget _buildLoadingPage() {
-    return Loading();
+    final base = WpyTheme.of(context).get(WpyColorKey.infoTextColor);
+    final highlight =
+        WpyTheme.of(context).get(WpyColorKey.secondaryInfoTextColor);
+    return Stack(
+      children: [
+        Column(
+          children: [
+            SizedBox(height: MediaQuery.of(context).padding.top),
+            Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(width: 0.9.sw, child: _buildSearchBar()),
+                    _buildMessageButton()
+                  ],
+                ),
+                SizedBox(height: 16),
+                SizedBox(
+                  height: tabBarHeight - 14,
+                  width: 1.sw,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          physics: NeverScrollableScrollPhysics(),
+                          children: [
+                            for (int i = 0; i < 7; i++)
+                              Shimmer.fromColors(
+                                child: Container(
+                                  width: 50,
+                                  margin: EdgeInsets.only(right: 16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black12,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                baseColor: base,
+                                highlightColor: highlight,
+                              ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 4)
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ],
+        ),
+        Padding(
+          padding: EdgeInsets.only(
+              // 因为上面的空要藏住搜索框
+              top: max(MediaQuery.of(context).padding.top + searchBarHeight,
+                  searchBarHeight + tabBarHeight),
+              bottom: Platform.isWindows ? 0 : 52.h),
+          child: RefreshSkeleton(),
+        ),
+      ],
+    );
   }
 
   Widget _buildForumView(List<WPYTab> tabs) {
@@ -267,10 +333,9 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   /*
   *
   * 具体的流程是： 首先打开， 加载Tab（使用FutureBuilder）
-  * Tab没加载完成之前，显示全屏的Loading （TODO: 之后变成骨架屏）
+  * Tab没加载完成之前，显示全屏的Loading
   * 加载完成之后，初始化TabController
   * 构建TabBar SearchBar 和 ForumView (主要的帖子显示区域)
-  *
   * */
   @override
   Widget build(BuildContext context) {
