@@ -624,6 +624,7 @@ class _NCommentCardState extends State<NCommentCard>
               commentFloor: index + 1,
               isSubFloor: true,
               isFullView: widget.isFullView,
+              type: widget.type,
               expandAll: widget.expandAll,
             );
           },
