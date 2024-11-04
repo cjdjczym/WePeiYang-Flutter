@@ -16,10 +16,10 @@ import 'package:we_pei_yang_flutter/feedback/view/components/widget/icon_widget.
 import 'package:we_pei_yang_flutter/feedback/view/components/widget/long_text_shower.dart';
 import 'package:we_pei_yang_flutter/feedback/view/components/widget/round_taggings.dart';
 import 'package:we_pei_yang_flutter/feedback/view/lake_home_page/lake_notifier.dart';
-import 'package:we_pei_yang_flutter/feedback/view/post_pic_module/post_detail_pic.dart';
-import 'package:we_pei_yang_flutter/feedback/view/post_pic_module/post_preview_pic.dart';
-import '../../../commons/themes/template/wpy_theme_data.dart';
-import '../../../commons/themes/wpy_theme.dart';
+import 'package:we_pei_yang_flutter/feedback/view/post_pic/post_detail_pic.dart';
+import 'package:we_pei_yang_flutter/feedback/view/post_pic/post_preview_pic.dart';
+import 'package:we_pei_yang_flutter/commons/themes/template/wpy_theme_data.dart';
+import 'package:we_pei_yang_flutter/commons/themes/wpy_theme.dart';
 
 class PostCardNormal extends StatefulWidget {
   /// 标准 PostCard

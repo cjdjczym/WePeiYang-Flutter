@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
@@ -128,7 +129,75 @@ class _NewPostPageState extends State<NewPostPage> {
 
   @override
   Widget build(BuildContext context) {
-    final appBar = AppBar(
+    return Scaffold(
+        backgroundColor:
+            WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
+        appBar: _buildAppBar(context),
+        body: Column(
+          children: [
+            TitleInputField(),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                          padding: widget.args.isFollowing
+                              ? const EdgeInsets.fromLTRB(0, 14, 0, 20)
+                              : EdgeInsets.zero,
+                          child: widget.args.isFollowing
+                              ? Text('跟帖:',
+                                  style: TextUtil.base.NotoSansSC.w500
+                                      .sp(14)
+                                      .label(context))
+                              : LakeSelector()),
+                      SizedBox(height: 10),
+                      Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: WpyTheme.of(context)
+                              .get(WpyColorKey.secondaryBackgroundColor),
+                        ),
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ContentInputField(),
+                              SizedBox(height: 10),
+                              ImagesGridView(),
+                              SizedBox(height: 20),
+                              Row(
+                                children: [
+                                  Spacer(),
+                                  CampusSelector(campusNotifier),
+                                  SizedBox(width: 18),
+                                  _buildSubmitButton(context),
+                                ],
+                              ),
+                            ]),
+                      ),
+                      SizedBox(height: 22),
+                      widget.args.isFollowing
+                          ? Text('${widget.args.tagName}'.substring(3),
+                              style: TextUtil.base.NotoSansSC.w500
+                                  .sp(14)
+                                  .label(context))
+                          : departmentTagView(
+                              context.read<NewPostProvider>().postTypeNotifier),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ));
+  }
+
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
       title: Text(
         '冒泡',
         style: TextUtil.base.NotoSansSC.w700.sp(18).label(context),
@@ -147,8 +216,10 @@ class _NewPostPageState extends State<NewPostPage> {
       ),
       backgroundColor: Colors.transparent,
     );
+  }
 
-    final submitButton = Hero(
+  Hero _buildSubmitButton(BuildContext context) {
+    return Hero(
       tag: "addNewPost",
       child: ElevatedButton(
         style: ButtonStyle(
@@ -174,62 +245,6 @@ class _NewPostPageState extends State<NewPostPage> {
             style: TextUtil.base.NotoSansSC.w500.sp(14).bright(context)),
       ),
     );
-
-    return Scaffold(
-        backgroundColor:
-            WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
-        appBar: appBar,
-        body: Column(
-          children: [
-            TitleInputField(),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                          padding: widget.args.isFollowing
-                              ? const EdgeInsets.fromLTRB(0, 14, 0, 20)
-                              : EdgeInsets.zero,
-                          child: widget.args.isFollowing
-                              ? Text('跟帖:',
-                                  style: TextUtil.base.NotoSansSC.w500
-                                      .sp(14)
-                                      .label(context))
-                              : LakeSelector()),
-                      SizedBox(height: 30),
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ContentInputField(),
-                            SizedBox(height: 10),
-                            ImagesGridView(),
-                            SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Spacer(),
-                                CampusSelector(campusNotifier),
-                                submitButton,
-                              ],
-                            ),
-                          ]),
-                      SizedBox(height: 22),
-                      widget.args.isFollowing
-                          ? Text('${widget.args.tagName}'.substring(3),
-                              style: TextUtil.base.NotoSansSC.w500
-                                  .sp(14)
-                                  .label(context))
-                          : departmentTagView(
-                              context.read<NewPostProvider>().postTypeNotifier),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ));
   }
 }
 
@@ -399,6 +414,7 @@ class _CampusSelectorState extends State<CampusSelector> {
       builder: (context, int value, _) {
         return PopupMenuButton(
           padding: EdgeInsets.zero,
+          color: WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
           shape: RacTangle(),
           offset: Offset(-120.w, -60.w),
           tooltip: "校区",
@@ -412,16 +428,26 @@ class _CampusSelectorState extends State<CampusSelector> {
                     BlendMode.srcIn),
               ),
               SizedBox(width: 10),
-              Text(
-                texts[value],
-                style: TextUtil.base
-                    .sp(14)
-                    .w400
-                    .NotoSansSC
-                    .normal
-                    .primaryAction(context),
+              AnimatedSwitcher(
+                duration: Duration(milliseconds: 300),
+                // 使用滚动动画
+                transitionBuilder: (child, animation) {
+                  return ScaleTransition(
+                    scale: animation,
+                    child: child,
+                  );
+                },
+                child: Text(
+                  key: ValueKey(value),
+                  texts[value],
+                  style: TextUtil.base
+                      .sp(14)
+                      .w400
+                      .NotoSansSC
+                      .normal
+                      .primaryAction(context),
+                ),
               ),
-              SizedBox(width: 18),
             ],
           ),
           onSelected: (int value) {
@@ -654,10 +680,10 @@ class _ImagesGridViewState extends State<ImagesGridView> {
             context, FeedbackRouter.localImageView,
             arguments: LocalImageViewPageArgs(data, [], length, index)),
         child: Container(
+          width: double.infinity,
+          height: double.infinity,
           decoration: BoxDecoration(
-              shape: BoxShape.rectangle,
               border: Border.all(
-                  width: 1,
                   color:
                       WpyTheme.of(context).get(WpyColorKey.dislikeSecondary)),
               borderRadius: BorderRadius.all(Radius.circular(8))),
@@ -665,6 +691,8 @@ class _ImagesGridViewState extends State<ImagesGridView> {
             child: () {
               final img = Image.file(
                 data[index],
+                width: double.infinity,
+                height: double.infinity,
                 fit: BoxFit.cover,
               );
 
@@ -682,6 +710,8 @@ class _ImagesGridViewState extends State<ImagesGridView> {
           ),
         ),
       ),
+
+      // 右下角的编辑符号
       Positioned(
         right: 0,
         bottom: 0,
@@ -811,12 +841,19 @@ class _ImagePickerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(
-        Icons.crop_original,
-        color: WpyTheme.of(context).get(WpyColorKey.basicTextColor),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+            color: WpyTheme.of(context).get(WpyColorKey.dislikeSecondary)),
+        borderRadius: BorderRadius.circular(8),
       ),
-      onPressed: onTap,
+      child: IconButton(
+        icon: Icon(
+          Icons.crop_original,
+          color: WpyTheme.of(context).get(WpyColorKey.basicTextColor),
+        ),
+        onPressed: onTap,
+      ),
     );
   }
 }

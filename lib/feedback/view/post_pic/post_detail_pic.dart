@@ -6,7 +6,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:we_pei_yang_flutter/commons/themes/template/wpy_theme_data.dart';
 import 'package:we_pei_yang_flutter/commons/themes/wpy_theme.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/wpy_pic.dart';
-import 'package:we_pei_yang_flutter/feedback/view/post_pic_module/post_preview_pic.dart';
+import 'package:we_pei_yang_flutter/feedback/view/post_pic/post_preview_pic.dart';
 import '../../../commons/environment/config.dart';
 import '../../../commons/util/text_util.dart';
 import '../../../main.dart';

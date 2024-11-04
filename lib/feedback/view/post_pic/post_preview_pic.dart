@@ -30,7 +30,7 @@ class OuterSinglePostPic extends StatelessWidget {
             child: WpyPic(
               picBaseUrl + 'origin/' + imgUrl,
               fit: BoxFit.cover,
-              withHolder: true,
+              withHolder: false,
               withCache: true,
               width: layout.maxWidth,
               alignment: Alignment.topCenter,
@@ -85,7 +85,7 @@ class OuterMultiPostPic extends StatelessWidget {
                       picBaseUrl + 'thumb/' + imgUrls[index],
                       width: layout.maxWidth / imgUrls.length - padding * 2,
                       fit: BoxFit.cover,
-                      withHolder: true,
+                      withHolder: false,
                       withCache: true,
                     ),
                   ),

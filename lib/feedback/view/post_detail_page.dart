@@ -18,13 +18,13 @@ import 'package:we_pei_yang_flutter/commons/util/dialog_provider.dart';
 import 'package:we_pei_yang_flutter/commons/util/router_manager.dart';
 import 'package:we_pei_yang_flutter/commons/util/text_util.dart';
 import 'package:we_pei_yang_flutter/commons/util/toast_provider.dart';
-import 'package:we_pei_yang_flutter/commons/widgets/loading.dart';
 import 'package:we_pei_yang_flutter/feedback/model/feedback_notifier.dart';
 import 'package:we_pei_yang_flutter/feedback/network/feedback_service.dart';
 import 'package:we_pei_yang_flutter/feedback/network/post.dart';
 import 'package:we_pei_yang_flutter/feedback/util/splitscreen_util.dart';
 import 'package:we_pei_yang_flutter/feedback/view/components/normal_comment_card.dart';
 import 'package:we_pei_yang_flutter/feedback/view/image_view/local_image_view_page.dart';
+import 'package:we_pei_yang_flutter/feedback/view/lake_home_page/normal_sub_page.dart';
 import 'package:we_pei_yang_flutter/feedback/view/report_question_page.dart';
 import 'package:we_pei_yang_flutter/main.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
@@ -41,6 +41,8 @@ enum DetailPageStatus {
   idle,
   error,
 }
+
+final currentRefresher = ValueNotifier<RefreshController?>(null);
 
 // ignore: must_be_immutable
 class PostDetailPage extends StatefulWidget {
@@ -85,6 +87,7 @@ class _PostDetailPageState extends State<PostDetailPage>
 
   @override
   void initState() {
+    currentRefresher.value = _refreshController;
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       /// 如果是从通知栏点进来的
@@ -316,25 +319,144 @@ class _PostDetailPageState extends State<PostDetailPage>
     });
   }
 
+  Widget _buildCommentCard(BuildContext context, int i) {
+    if (i == 0) {
+      return Column(
+        children: [
+          if (_showPostCard)
+            PostCardNormal(
+              widget.post,
+              outer: false,
+              screenshotController: screenshotController,
+              expandAll: screenshotting.value,
+            )
+          else ...[
+            PostSkeleton(),
+            Divider(),
+          ],
+          SizedBox(height: SplitUtil.h * 10),
+          _buildSortSelection(context),
+          SizedBox(height: 10), //topCard,
+        ],
+      );
+    }
+    i--;
+    if (!_showPostCard) {
+      // 连续5个PostSkeleton
+      return PostSkeleton();
+    }
+
+    if (i < _officialCommentList.length) {
+      if (i > 2) i--;
+      var data = _officialCommentList[i];
+      var list = _officialCommentList;
+      if (i == 0) {
+        return OfficialReplyCard.reply(
+          tag: widget.post.department?.name ?? '',
+          comment: data,
+          placeAppeared: i,
+          ratings: widget.post.rating,
+          ancestorId: widget.post.uid,
+          onContentPressed: (refresh) async {
+            refresh.call(list);
+          },
+        );
+      } else if (i == 1) {
+        return OfficialReplyCard.subFloor(
+          comment: data,
+          placeAppeared: i,
+          ratings: widget.post.rating,
+          ancestorId: widget.post.uid,
+          onContentPressed: (refresh) async {
+            refresh.call(list);
+          },
+        );
+      } else {
+        return SizedBox.shrink();
+      }
+    } else {
+      var data = _commentList[i - _officialCommentList.length];
+      if (screenshotting.value && !screenshotList.list.contains(data.id))
+        return SizedBox.shrink();
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          var _commentBody = ListenableBuilder(
+              listenable: screenshotSelecting,
+              child: ConstrainedBox(
+                  constraints: constraints,
+                  child: NCommentCard(
+                    type: widget.post.type,
+                    uid: widget.post.uid,
+                    comment: data,
+                    ancestorUId: widget.post.id,
+                    ancestorName: widget.post.nickname,
+                    commentFloor: i + 1,
+                    isSubFloor: false,
+                    isFullView: false,
+                    showBlockButton: _showBlockButton,
+                    expandAll: screenshotting.value,
+                  )),
+              builder: (context, comment) {
+                return Container(
+                  color: Colors.transparent,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (screenshotSelecting.value)
+                        Container(
+                          margin: EdgeInsets.only(left: 8.w),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            // color: ColorUtil.greyShade300,
+                          ),
+                          child: ListenableBuilder(
+                              listenable: screenshotList,
+                              builder: (context, _) => Checkbox(
+                                    activeColor: WpyTheme.of(context).get(
+                                        WpyColorKey.oldSecondaryActionColor),
+                                    focusColor: WpyTheme.of(context)
+                                        .get(WpyColorKey.oldHintColor),
+                                    hoverColor: WpyTheme.of(context)
+                                        .get(WpyColorKey.oldSwitchBarColor),
+                                    checkColor: WpyTheme.of(context)
+                                        .get(WpyColorKey.reverseTextColor),
+                                    side: MaterialStateBorderSide.resolveWith(
+                                        (_) => BorderSide(
+                                              color: WpyTheme.of(context).get(
+                                                  WpyColorKey.infoTextColor),
+                                              width: 2,
+                                            )),
+                                    value:
+                                        screenshotList.list.contains(data.id),
+                                    onChanged: (value) {
+                                      if (value!)
+                                        screenshotList.list.add(data.id);
+                                      else
+                                        screenshotList.list.remove(data.id);
+                                      screenshotList.update();
+                                    },
+                                  )),
+                        ),
+                      comment ?? SizedBox.shrink(),
+                    ],
+                  ),
+                );
+              });
+
+          return SingleChildScrollView(
+            physics: NeverScrollableScrollPhysics(),
+            scrollDirection: Axis.horizontal,
+            child: _commentBody,
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget body;
-    Widget bottomInput;
-
-    Widget checkButton = WButton(
-      onPressed: () {
-        // 点击校务的官方回复时，应当进入official_reply_detail_page而不是在底部弹出输入框，所以这里一定是普通楼层的回复
-        launchKey.currentState?.send(false);
-        setState(() {});
-      },
-      child: SvgPicture.asset(
-        'assets/svg_pics/lake_butt_icons/send.svg',
-        width: SplitUtil.w * 20,
-        colorFilter: ColorFilter.mode(
-            WpyTheme.of(context).get(WpyColorKey.basicTextColor),
-            BlendMode.srcIn),
-      ),
-    );
 
     if (preChangeId != (widget.changeId ?? preChangeId)) {
       initWhileChangingPost();
@@ -343,217 +465,15 @@ class _PostDetailPageState extends State<PostDetailPage>
     }
 
     if (status == DetailPageStatus.loading) {
-      body = ListView(
-        children: [
-          PostCardNormal(
-            widget.post,
-            outer: false,
-          ),
-          SizedBox(
-            height: SplitUtil.h * 120,
-            child: Center(child: Loading()),
-          )
-        ],
-      );
+      body = _buildLoadingPlaceholder(context);
     } else if (status == DetailPageStatus.idle) {
       Widget contentList = ListView.builder(
         shrinkWrap: true,
-        itemBuilder: (BuildContext context, int i) {
-          if (i == 0) {
-            return Column(
-              children: [
-                if (_showPostCard)
-                  PostCardNormal(
-                    widget.post,
-                    outer: false,
-                    screenshotController: screenshotController,
-                    expandAll: screenshotting.value,
-                  ),
-                SizedBox(height: SplitUtil.h * 10),
-                Row(
-                  children: [
-                    SizedBox(width: SplitUtil.w * 15),
-                    GestureDetector(
-                      onTap: () {
-                        order.value = 1;
-                      },
-                      child: Text('时间正序',
-                          style: order.value == 1
-                              ? TextUtil.base.w700.sp(14).primaryAction(context)
-                              : TextUtil.base.label(context).w500.sp(14)),
-                    ),
-                    SizedBox(width: SplitUtil.w * 15),
-                    GestureDetector(
-                      onTap: () {
-                        order.value = 0;
-                      },
-                      child: Text('时间倒序',
-                          style: order.value == 0
-                              ? TextUtil.base.w700.sp(14).primaryAction(context)
-                              : TextUtil.base.label(context).w500.sp(14)),
-                    ),
-                    Spacer(),
-                    ValueListenableBuilder(
-                      valueListenable: onlyOwner,
-                      builder: (context, value, _) {
-                        return WButton(
-                          onPressed: () {
-                            onlyOwner.value = 1 - onlyOwner.value;
-                            _refreshController.requestRefresh();
-                          },
-                          child: value == 1
-                              ? Container(
-                                  padding: EdgeInsets.fromLTRB(
-                                      0, SplitUtil.h * 2, 0, SplitUtil.h * 1),
-                                  decoration: BoxDecoration(
-                                    color: WpyTheme.of(context)
-                                        .get(WpyColorKey.primaryActionColor),
-                                    borderRadius: BorderRadius.circular(20.r),
-                                  ),
-                                  child: Text('  只看楼主  ',
-                                      style: TextUtil.base
-                                          .reverse(context)
-                                          .w400
-                                          .sp(14)),
-                                )
-                              : Container(
-                                  padding: EdgeInsets.fromLTRB(
-                                      0, SplitUtil.h * 2, 0, SplitUtil.h * 1),
-                                  decoration: BoxDecoration(
-                                    color: WpyTheme.of(context).get(
-                                        WpyColorKey.secondaryBackgroundColor),
-                                    borderRadius: BorderRadius.circular(20.r),
-                                  ),
-                                  child: Text('  只看楼主  ',
-                                      style: TextUtil.base
-                                          .label(context)
-                                          .w400
-                                          .sp(14)),
-                                ),
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 15),
-                  ],
-                ),
-                SizedBox(height: 10), //topCard,
-              ],
-            );
-          }
-          i--;
-          if (i < _officialCommentList.length) {
-            if (i > 2) i--;
-            var data = _officialCommentList[i];
-            var list = _officialCommentList;
-            if (i == 0) {
-              return OfficialReplyCard.reply(
-                tag: widget.post.department?.name ?? '',
-                comment: data,
-                placeAppeared: i,
-                ratings: widget.post.rating,
-                ancestorId: widget.post.uid,
-                onContentPressed: (refresh) async {
-                  refresh.call(list);
-                },
-              );
-            } else if (i == 1) {
-              return OfficialReplyCard.subFloor(
-                comment: data,
-                placeAppeared: i,
-                ratings: widget.post.rating,
-                ancestorId: widget.post.uid,
-                onContentPressed: (refresh) async {
-                  refresh.call(list);
-                },
-              );
-            } else {
-              return SizedBox.shrink();
-            }
-          } else {
-            var data = _commentList[i - _officialCommentList.length];
-            if (screenshotting.value && !screenshotList.list.contains(data.id))
-              return SizedBox.shrink();
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                var _commentBody = ListenableBuilder(
-                    listenable: screenshotSelecting,
-                    child: ConstrainedBox(
-                        constraints: constraints,
-                        child: NCommentCard(
-                          type: widget.post.type,
-                          uid: widget.post.uid,
-                          comment: data,
-                          ancestorUId: widget.post.id,
-                          ancestorName: widget.post.nickname,
-                          commentFloor: i + 1,
-                          isSubFloor: false,
-                          isFullView: false,
-                          showBlockButton: _showBlockButton,
-                          expandAll: screenshotting.value,
-                        )),
-                    builder: (context, comment) {
-                      return Container(
-                        color: Colors.transparent,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (screenshotSelecting.value)
-                              Container(
-                                margin: EdgeInsets.only(left: 8.w),
-                                decoration: BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10)),
-                                  // color: ColorUtil.greyShade300,
-                                ),
-                                child: ListenableBuilder(
-                                    listenable: screenshotList,
-                                    builder: (context, _) => Checkbox(
-                                          activeColor: WpyTheme.of(context).get(
-                                              WpyColorKey
-                                                  .oldSecondaryActionColor),
-                                          focusColor: WpyTheme.of(context)
-                                              .get(WpyColorKey.oldHintColor),
-                                          hoverColor: WpyTheme.of(context).get(
-                                              WpyColorKey.oldSwitchBarColor),
-                                          checkColor: WpyTheme.of(context).get(
-                                              WpyColorKey.reverseTextColor),
-                                          side: MaterialStateBorderSide
-                                              .resolveWith((_) => BorderSide(
-                                                    color: WpyTheme.of(context)
-                                                        .get(WpyColorKey
-                                                            .infoTextColor),
-                                                    width: 2,
-                                                  )),
-                                          value: screenshotList.list
-                                              .contains(data.id),
-                                          onChanged: (value) {
-                                            if (value!)
-                                              screenshotList.list.add(data.id);
-                                            else
-                                              screenshotList.list
-                                                  .remove(data.id);
-                                            screenshotList.update();
-                                          },
-                                        )),
-                              ),
-                            comment ?? SizedBox.shrink(),
-                          ],
-                        ),
-                      );
-                    });
-
-                return SingleChildScrollView(
-                  physics: NeverScrollableScrollPhysics(),
-                  scrollDirection: Axis.horizontal,
-                  child: _commentBody,
-                );
-              },
-            );
-          }
-        },
+        itemBuilder: _buildCommentCard,
         controller: _controller,
-        itemCount: _officialCommentList.length + _commentList.length + 1,
+        itemCount: _showPostCard
+            ? _officialCommentList.length + _commentList.length + 1
+            : 5,
       );
 
       Widget mainList = NotificationListener<ScrollNotification>(
@@ -595,188 +515,6 @@ class _PostDetailPageState extends State<PostDetailPage>
             _onScrollNotification(scrollInfo),
       );
 
-      var inputField =
-          CommentInputField(postId: widget.post.id, key: launchKey);
-
-      bottomInput = Column(
-        children: [
-          Spacer(),
-          Consumer<NewFloorProvider>(builder: (BuildContext context, value, _) {
-            return AnimatedSize(
-              clipBehavior: Clip.antiAlias,
-              duration: Duration(milliseconds: 300),
-              curve: Curves.easeOutSine,
-              child: Container(
-                margin: EdgeInsets.only(top: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24.r),
-                      topRight: Radius.circular(24.r)),
-                  boxShadow: [
-                    BoxShadow(
-                        color: WpyTheme.of(context)
-                            .get(WpyColorKey.iconAnimationStartColor),
-                        offset: Offset(0, 1),
-                        blurRadius: 6,
-                        spreadRadius: 0),
-                  ],
-                  color: WpyTheme.of(context)
-                      .get(WpyColorKey.primaryBackgroundColor),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            children: [
-                              Offstage(
-                                  offstage: !value.inputFieldEnabled,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      inputField,
-                                      ImageSelectAndView(
-                                          key: imageSelectionKey),
-                                      SizedBox(height: SplitUtil.h * 4),
-                                      Row(
-                                        children: [
-                                          SizedBox(width: SplitUtil.h * 4),
-                                          if (value.images.length == 0)
-                                            IconButton(
-                                                icon: Image.asset(
-                                                  'assets/images/lake_butt_icons/image.png',
-                                                  width: SplitUtil.w * 24,
-                                                  height: SplitUtil.w * 24,
-                                                  color: WpyTheme.of(context)
-                                                      .get(WpyColorKey
-                                                          .basicTextColor),
-                                                ),
-                                                onPressed: () =>
-                                                    imageSelectionKey
-                                                        .currentState
-                                                        ?.loadAssets()),
-                                          if (value.images.length == 0)
-                                            IconButton(
-                                                icon: Image.asset(
-                                                  'assets/images/lake_butt_icons/camera.png',
-                                                  width: SplitUtil.w * 24,
-                                                  height: SplitUtil.w * 24,
-                                                  fit: BoxFit.contain,
-                                                  color: WpyTheme.of(context)
-                                                      .get(WpyColorKey
-                                                          .basicTextColor),
-                                                ),
-                                                onPressed: () =>
-                                                    imageSelectionKey
-                                                        .currentState
-                                                        ?.shotPic()),
-                                          IconButton(
-                                              icon: Image.asset(
-                                                'assets/images/lake_butt_icons/paste.png',
-                                                width: SplitUtil.w * 24,
-                                                height: SplitUtil.w * 24,
-                                                fit: BoxFit.contain,
-                                                color: WpyTheme.of(context).get(
-                                                    WpyColorKey.basicTextColor),
-                                              ),
-                                              onPressed: () => launchKey
-                                                  .currentState
-                                                  ?.getClipboardData()),
-                                          IconButton(
-                                              icon: Image.asset(
-                                                'assets/images/lake_butt_icons/x.png',
-                                                width: SplitUtil.w * 24,
-                                                height: SplitUtil.w * 24,
-                                                fit: BoxFit.fitWidth,
-                                                color: WpyTheme.of(context).get(
-                                                    WpyColorKey.basicTextColor),
-                                              ),
-                                              onPressed: () {
-                                                if (launchKey
-                                                    .currentState!
-                                                    .textEditingController
-                                                    .text
-                                                    .isNotEmpty) {
-                                                  launchKey.currentState!
-                                                      .textEditingController
-                                                      .clear();
-                                                  launchKey.currentState
-                                                      ?.setState(() {
-                                                    launchKey.currentState
-                                                            ?.commentLengthIndicator =
-                                                        '清空成功';
-                                                  });
-                                                } else {
-                                                  value.clearAndClose();
-                                                }
-                                              }),
-                                          Spacer(),
-                                          checkButton,
-                                          SizedBox(width: SplitUtil.w * 16),
-                                        ],
-                                      ),
-                                      SizedBox(height: SplitUtil.h * 10)
-                                    ],
-                                  )),
-                              Offstage(
-                                offstage: value.inputFieldEnabled,
-                                child: InkWell(
-                                  onTap: () {
-                                    context
-                                        .read<NewFloorProvider>()
-                                        .inputFieldEnabled = true;
-                                    value.inputFieldOpenAndReplyTo(0);
-                                    FocusScope.of(context)
-                                        .requestFocus(value.focusNode);
-                                  },
-                                  child: Container(
-                                      height: SplitUtil.h * 36,
-                                      margin: EdgeInsets.fromLTRB(
-                                          SplitUtil.w * 8,
-                                          SplitUtil.h * 13,
-                                          0,
-                                          SplitUtil.h * 13),
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: SplitUtil.w * 8),
-                                      child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: widget.post.type == 1
-                                            ? Text('校务帖子为实名发言!!!',
-                                                style: TextUtil
-                                                    .base.NotoSansSC.w500
-                                                    .dangerousRed(context)
-                                                    .sp(12))
-                                            : Text('友善回复，真诚沟通',
-                                                style: TextUtil
-                                                    .base.NotoSansSC.w500
-                                                    .secondaryInfo(context)
-                                                    .sp(12)),
-                                      ),
-                                      decoration: BoxDecoration(
-                                        borderRadius:
-                                            BorderRadius.circular(18.r),
-                                        color: WpyTheme.of(context).get(
-                                            WpyColorKey
-                                                .secondaryBackgroundColor),
-                                      )),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (!value.inputFieldEnabled)
-                          BottomLikeFavDislike(widget.post),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
-        ],
-      );
       body = SafeArea(
         child: Stack(
           key: ValueKey("loaded"),
@@ -787,7 +525,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                 SizedBox(height: SplitUtil.h * 60),
               ],
             ),
-            bottomInput
+            _buildBottomActionBar(),
           ],
         ),
       );
@@ -795,7 +533,156 @@ class _PostDetailPageState extends State<PostDetailPage>
       body = Center(child: Text("error!"));
     }
 
-    var menuButton = IconButton(
+    var appBar = AppBar(
+      toolbarHeight: SplitUtil.h * 40,
+      titleSpacing: 0,
+      backgroundColor:
+          WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
+      leading: IconButton(
+        icon: Icon(
+          (widget.split ?? false) ? Icons.clear : Icons.arrow_back,
+          color: WpyTheme.of(context).get(WpyColorKey.labelTextColor),
+        ),
+        onPressed: () => Navigator.pop(context, widget.post),
+      ),
+      actions: [
+        if (hasAdmin) _adminButton(context),
+        _screenshotCancel(),
+        _screenshotConfirm(context),
+        SizedBox(width: 10),
+      ],
+      centerTitle: true,
+      title: WButton(
+        onPressed: () => _refreshController.requestRefresh(),
+        child: Text(
+          widget.post.type == 1 ? '校务提问：实名' : '冒泡',
+          style: TextUtil.base.NotoSansSC.label(context).w600.sp(18),
+        ),
+      ),
+      elevation: 0,
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: (() {
+        return (WpyTheme.of(context).brightness == Brightness.dark
+                ? SystemUiOverlayStyle.dark
+                : SystemUiOverlayStyle.light)
+            .copyWith(
+                systemNavigationBarColor: WpyTheme.of(context)
+                    .get(WpyColorKey.secondaryBackgroundColor));
+      })(),
+      child: PopScope(
+        canPop: true,
+        onPopInvoked: (didPop) {
+          if (didPop) return;
+          Navigator.pop(context, widget.post);
+        },
+        child: GestureDetector(
+          child: Padding(
+            padding: widget.split ?? false
+                ? EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top <
+                            widget.searchBarHeight
+                        ? widget.searchBarHeight
+                        : MediaQuery.of(context).padding.top)
+                : EdgeInsets.zero,
+            child: Scaffold(
+              backgroundColor:
+                  WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
+              appBar: appBar,
+              body: AnimatedSwitcher(
+                duration: Duration(milliseconds: 300),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  if (child.key != ValueKey("loaded")) {
+                    return child;
+                  } else {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    );
+                  }
+                },
+                child: body,
+              ),
+            ),
+          ),
+          onHorizontalDragUpdate: (DragUpdateDetails details) {
+            if (details.delta.dx > 20) {
+              Navigator.pop(context, widget.post);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  ListView _buildLoadingPlaceholder(BuildContext context) {
+    return ListView(
+      physics: NeverScrollableScrollPhysics(),
+      children: [
+        PostCardNormal(
+          widget.post,
+          outer: false,
+        ),
+        SizedBox(height: SplitUtil.h * 10),
+        _buildSortSelection(context),
+        SizedBox(height: 10), //t
+        for (int i = 0; i < 5; i++) PostSkeleton(),
+      ],
+    );
+  }
+
+  IconButton _adminButton(BuildContext context) {
+    return IconButton(
+        icon: Icon(Icons.admin_panel_settings,
+            size: SplitUtil.w * 23,
+            color: WpyTheme.of(context).get(WpyColorKey.labelTextColor)),
+        onPressed: () => _showManageDialog());
+  }
+
+  ListenableBuilder _screenshotConfirm(BuildContext context) {
+    return ListenableBuilder(
+      listenable: screenshotSelecting,
+      child: _buildActionButton(context),
+      builder: (context, child) {
+        if (screenshotSelecting.value)
+          return IconButton(
+              onPressed: () async {
+                screenshotSelecting.value = false;
+                screenshotting.value = true;
+                //TODO:等待图片加载完成
+                await Future.delayed(Duration(milliseconds: 888));
+                await takeScreenshot(selectedScreenshotController);
+                screenshotting.value = false;
+                screenshotList.empty();
+              },
+              icon: Icon(Icons.add_a_photo_outlined,
+                  color: WpyTheme.of(context).get(WpyColorKey.labelTextColor)));
+        ;
+        return child!;
+      },
+    );
+  }
+
+  ListenableBuilder _screenshotCancel() {
+    return ListenableBuilder(
+      listenable: screenshotSelecting,
+      builder: (context, child) {
+        if (screenshotSelecting.value)
+          return IconButton(
+              onPressed: () {
+                screenshotList.empty();
+                screenshotSelecting.value = false;
+              },
+              icon: Icon(Icons.cancel_outlined,
+                  color: WpyTheme.of(context).get(WpyColorKey.labelTextColor)));
+        return SizedBox.shrink();
+      },
+    );
+  }
+
+  IconButton _buildActionButton(BuildContext context) {
+    return IconButton(
         icon: SvgPicture.asset(
           'assets/svg_pics/lake_butt_icons/more_horizontal.svg',
           width: SplitUtil.w * 25,
@@ -902,12 +789,8 @@ class _PostDetailPageState extends State<PostDetailPage>
                               FeedbackService.deletePost(
                                 id: widget.post.id,
                                 onSuccess: () {
-                                  // final lake = context.read<LakeModel>();
-                                  // lake
-                                  //     .lakeAreas[
-                                  //         lake.tabList[lake.currentTab].id]!
-                                  //     .refreshController
-                                  //     .requestRefresh();
+                                  LakeUtil.currentController.refreshController
+                                      .requestRefresh();
                                   ToastProvider.success('删除成功');
                                   Navigator.of(context).popAndPushNamed(
                                       FeedbackRouter.home,
@@ -925,16 +808,6 @@ class _PostDetailPageState extends State<PostDetailPage>
                                 .primary(context)
                                 .sp(16),
                           )),
-                    // TODO: 这个收藏并没有用 先注释了
-                    // CupertinoActionSheetAction(
-                    //   onPressed: () => Navigator.pop(context),
-                    //   child: Text(
-                    //     '收藏',
-                    //     style: TextUtil.base.normal.w400.NotoSansSC
-                    //         .primary(context)
-                    //         .sp(16),
-                    //   ),
-                    // ),
                   ],
                   cancelButton: CupertinoActionSheetAction(
                     // 取消按钮
@@ -951,134 +824,254 @@ class _PostDetailPageState extends State<PostDetailPage>
             },
           );
         });
-    var manageButton = IconButton(
-        icon: Icon(Icons.admin_panel_settings,
-            size: SplitUtil.w * 23,
-            color: WpyTheme.of(context).get(WpyColorKey.labelTextColor)),
-        onPressed: () => _showManageDialog());
+  }
 
-    var confirmScreenshot = IconButton(
-        onPressed: () async {
-          screenshotSelecting.value = false;
-          screenshotting.value = true;
-          //TODO:等待图片加载完成
-          await Future.delayed(Duration(milliseconds: 888));
-          await takeScreenshot(selectedScreenshotController);
-          screenshotting.value = false;
-          screenshotList.empty();
-        },
-        icon: Icon(Icons.add_a_photo_outlined,
-            color: WpyTheme.of(context).get(WpyColorKey.labelTextColor)));
-
-    var cancelScreenshot = IconButton(
-        onPressed: () {
-          screenshotList.empty();
-          screenshotSelecting.value = false;
-        },
-        icon: Icon(Icons.cancel_outlined,
-            color: WpyTheme.of(context).get(WpyColorKey.labelTextColor)));
-
-    var appBar = AppBar(
-      toolbarHeight: SplitUtil.h * 40,
-      titleSpacing: 0,
-      backgroundColor:
-          WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
-      leading: IconButton(
-        icon: Icon(
-          (widget.split ?? false) ? Icons.clear : Icons.arrow_back,
-          color: WpyTheme.of(context).get(WpyColorKey.labelTextColor),
+  Row _buildSortSelection(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(width: SplitUtil.w * 15),
+        GestureDetector(
+          onTap: () {
+            order.value = 1;
+          },
+          child: Text('时间正序',
+              style: order.value == 1
+                  ? TextUtil.base.w700.sp(14).primaryAction(context)
+                  : TextUtil.base.label(context).w500.sp(14)),
         ),
-        onPressed: () => Navigator.pop(context, widget.post),
-      ),
-      actions: [
-        if (hasAdmin) manageButton,
-        // confirmScreenshot,
-        ListenableBuilder(
-          listenable: screenshotSelecting,
-          builder: (context, child) {
-            if (screenshotSelecting.value) return cancelScreenshot;
-            return SizedBox.shrink();
+        SizedBox(width: SplitUtil.w * 15),
+        GestureDetector(
+          onTap: () {
+            order.value = 0;
+          },
+          child: Text('时间倒序',
+              style: order.value == 0
+                  ? TextUtil.base.w700.sp(14).primaryAction(context)
+                  : TextUtil.base.label(context).w500.sp(14)),
+        ),
+        Spacer(),
+        ValueListenableBuilder(
+          valueListenable: onlyOwner,
+          builder: (context, value, _) {
+            return WButton(
+              onPressed: () {
+                onlyOwner.value = 1 - onlyOwner.value;
+                _refreshController.requestRefresh();
+              },
+              child: value == 1
+                  ? Container(
+                      padding: EdgeInsets.fromLTRB(
+                          0, SplitUtil.h * 2, 0, SplitUtil.h * 1),
+                      decoration: BoxDecoration(
+                        color: WpyTheme.of(context)
+                            .get(WpyColorKey.primaryActionColor),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Text('  只看楼主  ',
+                          style: TextUtil.base.reverse(context).w400.sp(14)),
+                    )
+                  : Container(
+                      padding: EdgeInsets.fromLTRB(
+                          0, SplitUtil.h * 2, 0, SplitUtil.h * 1),
+                      decoration: BoxDecoration(
+                        color: WpyTheme.of(context)
+                            .get(WpyColorKey.secondaryBackgroundColor),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Text('  只看楼主  ',
+                          style: TextUtil.base.label(context).w400.sp(14)),
+                    ),
+            );
           },
         ),
-        ListenableBuilder(
-          listenable: screenshotSelecting,
-          child: menuButton,
-          builder: (context, child) {
-            if (screenshotSelecting.value) return confirmScreenshot;
-            return child!;
-          },
-        ),
-
-        SizedBox(width: 10),
+        const SizedBox(width: 15),
       ],
-      title: WButton(
-        onPressed: () => _refreshController.requestRefresh(),
-        child: SizedBox(
-          width: double.infinity,
-          height: kToolbarHeight,
-          child: Align(
-            alignment: Alignment.center,
-            child: Text(
-              widget.post.type == 1 ? '校务提问：实名' : '冒泡',
-              style: TextUtil.base.NotoSansSC.label(context).w600.sp(18),
-            ),
-          ),
-        ),
-      ),
-      elevation: 0,
     );
+  }
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: (() {
-        return (WpyTheme.of(context).brightness == Brightness.dark
-                ? SystemUiOverlayStyle.dark
-                : SystemUiOverlayStyle.light)
-            .copyWith(
-                systemNavigationBarColor: WpyTheme.of(context)
-                    .get(WpyColorKey.secondaryBackgroundColor));
-      })(),
-      child: PopScope(
-        canPop: true,
-        onPopInvoked: (didPop) {
-          if (didPop) return;
-          Navigator.pop(context, widget.post);
-        },
-        child: GestureDetector(
-          child: Padding(
-            padding: widget.split ?? false
-                ? EdgeInsets.only(
-                    top: MediaQuery.of(context).padding.top <
-                            widget.searchBarHeight
-                        ? widget.searchBarHeight
-                        : MediaQuery.of(context).padding.top)
-                : EdgeInsets.zero,
-            child: Scaffold(
-              backgroundColor:
-                  WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
-              appBar: appBar,
-              body: AnimatedSwitcher(
-                duration: Duration(milliseconds: 300),
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  if (child.key != ValueKey("loaded")) {
-                    return child;
-                  } else {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    );
-                  }
-                },
-                child: body,
+  Column _buildBottomActionBar() {
+    final checkButton = WButton(
+      onPressed: () {
+        // 点击校务的官方回复时，应当进入official_reply_detail_page而不是在底部弹出输入框，所以这里一定是普通楼层的回复
+        launchKey.currentState?.send(false);
+        setState(() {});
+      },
+      child: SvgPicture.asset(
+        'assets/svg_pics/lake_butt_icons/send.svg',
+        width: SplitUtil.w * 20,
+        colorFilter: ColorFilter.mode(
+            WpyTheme.of(context).get(WpyColorKey.basicTextColor),
+            BlendMode.srcIn),
+      ),
+    );
+    return Column(
+      children: [
+        Spacer(),
+        Consumer<NewFloorProvider>(builder: (BuildContext context, value, _) {
+          return AnimatedSize(
+            clipBehavior: Clip.antiAlias,
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeOutSine,
+            child: Container(
+              margin: EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24.r),
+                    topRight: Radius.circular(24.r)),
+                boxShadow: [
+                  BoxShadow(
+                      color: WpyTheme.of(context)
+                          .get(WpyColorKey.iconAnimationStartColor),
+                      offset: Offset(0, 1),
+                      blurRadius: 6,
+                      spreadRadius: 0),
+                ],
+                color: WpyTheme.of(context)
+                    .get(WpyColorKey.primaryBackgroundColor),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Offstage(
+                                offstage: !value.inputFieldEnabled,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    CommentInputField(
+                                        postId: widget.post.id, key: launchKey),
+                                    ImageSelectAndView(key: imageSelectionKey),
+                                    SizedBox(height: SplitUtil.h * 4),
+                                    Row(
+                                      children: [
+                                        SizedBox(width: SplitUtil.h * 4),
+                                        if (value.images.length == 0)
+                                          IconButton(
+                                              icon: Image.asset(
+                                                'assets/images/lake_butt_icons/image.png',
+                                                width: SplitUtil.w * 24,
+                                                height: SplitUtil.w * 24,
+                                                color: WpyTheme.of(context).get(
+                                                    WpyColorKey.basicTextColor),
+                                              ),
+                                              onPressed: () => imageSelectionKey
+                                                  .currentState
+                                                  ?.loadAssets()),
+                                        if (value.images.length == 0)
+                                          IconButton(
+                                              icon: Image.asset(
+                                                'assets/images/lake_butt_icons/camera.png',
+                                                width: SplitUtil.w * 24,
+                                                height: SplitUtil.w * 24,
+                                                fit: BoxFit.contain,
+                                                color: WpyTheme.of(context).get(
+                                                    WpyColorKey.basicTextColor),
+                                              ),
+                                              onPressed: () => imageSelectionKey
+                                                  .currentState
+                                                  ?.shotPic()),
+                                        IconButton(
+                                            icon: Image.asset(
+                                              'assets/images/lake_butt_icons/paste.png',
+                                              width: SplitUtil.w * 24,
+                                              height: SplitUtil.w * 24,
+                                              fit: BoxFit.contain,
+                                              color: WpyTheme.of(context).get(
+                                                  WpyColorKey.basicTextColor),
+                                            ),
+                                            onPressed: () => launchKey
+                                                .currentState
+                                                ?.getClipboardData()),
+                                        IconButton(
+                                            icon: Image.asset(
+                                              'assets/images/lake_butt_icons/x.png',
+                                              width: SplitUtil.w * 24,
+                                              height: SplitUtil.w * 24,
+                                              fit: BoxFit.fitWidth,
+                                              color: WpyTheme.of(context).get(
+                                                  WpyColorKey.basicTextColor),
+                                            ),
+                                            onPressed: () {
+                                              if (launchKey
+                                                  .currentState!
+                                                  .textEditingController
+                                                  .text
+                                                  .isNotEmpty) {
+                                                launchKey.currentState!
+                                                    .textEditingController
+                                                    .clear();
+                                                launchKey.currentState
+                                                    ?.setState(() {
+                                                  launchKey.currentState
+                                                          ?.commentLengthIndicator =
+                                                      '清空成功';
+                                                });
+                                              } else {
+                                                value.clearAndClose();
+                                              }
+                                            }),
+                                        Spacer(),
+                                        checkButton,
+                                        SizedBox(width: SplitUtil.w * 16),
+                                      ],
+                                    ),
+                                    SizedBox(height: SplitUtil.h * 10)
+                                  ],
+                                )),
+                            Offstage(
+                              offstage: value.inputFieldEnabled,
+                              child: InkWell(
+                                onTap: () {
+                                  context
+                                      .read<NewFloorProvider>()
+                                      .inputFieldEnabled = true;
+                                  value.inputFieldOpenAndReplyTo(0);
+                                  FocusScope.of(context)
+                                      .requestFocus(value.focusNode);
+                                },
+                                child: Container(
+                                    height: SplitUtil.h * 36,
+                                    margin: EdgeInsets.fromLTRB(SplitUtil.w * 8,
+                                        SplitUtil.h * 13, 0, SplitUtil.h * 13),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: SplitUtil.w * 8),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: widget.post.type == 1
+                                          ? Text('校务帖子为实名发言!!!',
+                                              style: TextUtil
+                                                  .base.NotoSansSC.w500
+                                                  .dangerousRed(context)
+                                                  .sp(12))
+                                          : Text('友善回复，真诚沟通',
+                                              style: TextUtil
+                                                  .base.NotoSansSC.w500
+                                                  .secondaryInfo(context)
+                                                  .sp(12)),
+                                    ),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(18.r),
+                                      color: WpyTheme.of(context).get(
+                                          WpyColorKey.secondaryBackgroundColor),
+                                    )),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (!value.inputFieldEnabled)
+                        BottomLikeFavDislike(widget.post),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
-          onHorizontalDragUpdate: (DragUpdateDetails details) {
-            if (details.delta.dx > 20) {
-              Navigator.pop(context, widget.post);
-            }
-          },
-        ),
-      ),
+          );
+        }),
+      ],
     );
   }
 
@@ -1253,6 +1246,7 @@ class CommentInputFieldState extends State<CommentInputField> {
         FocusManager.instance.primaryFocus?.unfocus();
         context.read<NewFloorProvider>().clearAndClose();
         textEditingController.text = '';
+        currentRefresher.value?.requestRefresh();
         ToastProvider.success("评论成功 (❁´◡`❁)");
       },
       onFailure: (e) => ToastProvider.error(
@@ -1273,6 +1267,7 @@ class CommentInputFieldState extends State<CommentInputField> {
           FocusManager.instance.primaryFocus?.unfocus();
           context.read<NewFloorProvider>().clearAndClose();
           textEditingController.text = '';
+          currentRefresher.value?.requestRefresh();
           ToastProvider.success("回复成功 (❁´3`❁)");
         },
         onFailure: (e) => ToastProvider.error(
