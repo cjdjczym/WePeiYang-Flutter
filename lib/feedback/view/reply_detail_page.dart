@@ -34,8 +34,10 @@ class ReplyDetailPageArgs {
   final Floor floor;
   final int uid;
   final bool isMessage;
+  final int? type;
 
-  ReplyDetailPageArgs(this.floor, this.uid, {this.isMessage = false});
+  ReplyDetailPageArgs(this.floor, this.uid, this.type,
+      {this.isMessage = false});
 }
 
 class _ReplyDetailPageState extends State<ReplyDetailPage> {
@@ -171,6 +173,7 @@ class _ReplyDetailPageState extends State<ReplyDetailPage> {
                 commentFloor: index + 1,
                 isSubFloor: false,
                 isFullView: true,
+                type: widget.args.type,
               ),
               Container(
                 width: WePeiYangApp.screenWidth - 30.w,
@@ -197,6 +200,7 @@ class _ReplyDetailPageState extends State<ReplyDetailPage> {
                 commentFloor: index + 1,
                 isSubFloor: true,
                 isFullView: true,
+                type: widget.args.type,
               ),
             ),
           ],

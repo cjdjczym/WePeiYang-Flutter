@@ -790,7 +790,7 @@ class _NCommentCardState extends State<NCommentCard>
                                 context,
                                 FeedbackRouter.commentDetail,
                                 arguments: ReplyDetailPageArgs(
-                                    widget.comment, widget.uid),
+                                    widget.comment, widget.uid, widget.type),
                               );
                             },
                             child: Row(
