@@ -250,9 +250,11 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             SizedBox(height: 6.h),
                             LevelProgress(
-                              value: (CommonPreferences.levelPoint.value)
+                              value: (CommonPreferences.levelPoint.value -
+                                          CommonPreferences.curLevelPoint.value)
                                       .toDouble() /
-                                  (CommonPreferences.nextLevelPoint.value)
+                                  (CommonPreferences.nextLevelPoint.value -
+                                          CommonPreferences.curLevelPoint.value)
                                       .toDouble(),
                             ),
                             Row(
