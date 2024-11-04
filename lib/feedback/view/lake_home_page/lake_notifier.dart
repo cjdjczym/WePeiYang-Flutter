@@ -111,9 +111,10 @@ class LakeUtil {
 
   static final Map<int, LakePageController> lakePageControllers = {};
 
-  static get currentTabId => tabList[currentTab.value].id;
+  static int get currentTabId => tabList[currentTab.value].id;
 
-  static get currentController => lakePageControllers[currentTabId]!;
+  static LakePageController get currentController =>
+      lakePageControllers[currentTabId]!;
 
   static void _addDefaultTab() {
     WPYTab oTab = WPYTab(id: 0, shortname: '精华', name: '精华');
@@ -231,24 +232,31 @@ class LakePosts extends ChangeNotifier {
   // 使用post_id 获得Post
   final Map<int, Post> _posts = {};
 
+  List<Post> _postsList = [];
+
   void addPosts(List<Post> postList) {
     postList.forEach((element) {
       _posts.update(element.id, (value) => element, ifAbsent: () => element);
     });
+    _postsList = _posts.values.toList();
     notifyListeners();
   }
 
   void update(Post post) {
     _posts.update(post.id, (value) => post, ifAbsent: () => post);
+    _postsList = _posts.values.toList();
     notifyListeners();
   }
 
   void resetPosts(List<Post> postList) {
     _posts.clear();
     addPosts(postList);
+    _postsList = _posts.values.toList();
   }
 
   Map<int, Post> get posts => _posts;
+
+  get postsList => _postsList;
 }
 
 class LakePageController {

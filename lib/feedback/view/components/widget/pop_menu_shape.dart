@@ -13,7 +13,7 @@ class RacTangle extends ShapeBorder {
   Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
     var path = Path();
     Rect newRect = Rect.fromLTWH(27.5.w, 0, 87.6.w, rect.height);
-    path.addRRect(RRect.fromRectAndRadius(newRect, Radius.circular(20)));
+    path.addRRect(RRect.fromRectAndRadius(newRect, Radius.circular(5)));
     return path;
   }
 
