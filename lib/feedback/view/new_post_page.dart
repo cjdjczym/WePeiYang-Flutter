@@ -1,12 +1,15 @@
 import 'dart:io';
+import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
+import 'package:we_pei_yang_flutter/commons/util/logger.dart';
 import 'package:we_pei_yang_flutter/commons/util/text_util.dart';
 import 'package:we_pei_yang_flutter/commons/util/toast_provider.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/SpoilerMask.dart';
@@ -45,6 +48,8 @@ class NewPostArgs {
   NewPostArgs(this.isFollowing, this.tagId, this.type, this.tagName);
 }
 
+final ValueNotifier<PostVariant> variant = ValueNotifier(PostVariant.Common);
+
 class _NewPostPageState extends State<NewPostPage> {
   // 0 -> 不区分; 1 -> 卫津路; 2 -> 北洋园
   final campusNotifier = ValueNotifier(0);
@@ -59,13 +64,21 @@ class _NewPostPageState extends State<NewPostPage> {
     var dataModel = context.read<NewPostProvider>();
     dataModel.type = dataModel.postTypeNotifier.value;
 
+    if (variant.value == PostVariant.Vote) {
+      _voteFormController.submit(
+          context,
+          args.isFollowing ? args.type : dataModel.type,
+          campusNotifier.value,
+          args.isFollowing ? args.tagId : dataModel.tag?.id.toString() ?? '');
+      return;
+    }
+
     if (!dataModel.check) {
       dataModel.type == 1
           ? ToastProvider.error('内容标题与部门不能为空！')
           : ToastProvider.error('内容与标题不能为空！');
       return;
     }
-    ToastProvider.running("创建中...");
     _showLoading();
     if (dataModel.images.isNotEmpty) {
       FeedbackService.postPic(
@@ -127,6 +140,8 @@ class _NewPostPageState extends State<NewPostPage> {
     }
   }
 
+  VoteFormController _voteFormController = VoteFormController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -135,7 +150,19 @@ class _NewPostPageState extends State<NewPostPage> {
         appBar: _buildAppBar(context),
         body: Column(
           children: [
-            TitleInputField(),
+            AnimatedSize(
+              alignment: Alignment.topCenter,
+              duration: Duration(milliseconds: 250),
+              child: ListenableBuilder(
+                child: TitleInputField(),
+                builder: (context, old) {
+                  if (variant.value == PostVariant.Vote)
+                    return SizedBox.shrink();
+                  return old!;
+                },
+                listenable: variant,
+              ),
+            ),
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
@@ -165,12 +192,33 @@ class _NewPostPageState extends State<NewPostPage> {
                         child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ContentInputField(),
-                              SizedBox(height: 10),
-                              ImagesGridView(),
+                              AnimatedSize(
+                                alignment: Alignment.topCenter,
+                                duration: Duration(milliseconds: 250),
+                                child: ValueListenableBuilder(
+                                    valueListenable: variant,
+                                    builder: (ctx, v, oldChild) {
+                                      switch (v) {
+                                        case PostVariant.Common:
+                                          return Column(
+                                            children: [
+                                              ContentInputField(),
+                                              SizedBox(height: 20),
+                                              ImagesGridView(),
+                                            ],
+                                          );
+                                        case PostVariant.Vote:
+                                          return NewVoteForm(
+                                              controller: _voteFormController);
+                                        case PostVariant.Question:
+                                          return SizedBox.shrink();
+                                      }
+                                    }),
+                              ),
                               SizedBox(height: 20),
                               Row(
                                 children: [
+                                  PostVariantSelector(),
                                   Spacer(),
                                   CampusSelector(campusNotifier),
                                   SizedBox(width: 18),
@@ -235,7 +283,6 @@ class _NewPostPageState extends State<NewPostPage> {
         onPressed: () async {
           if (tapAble) {
             tapAble = false;
-
             await _submit();
             await Future.delayed(Duration(milliseconds: 3000));
             tapAble = true;
@@ -245,6 +292,288 @@ class _NewPostPageState extends State<NewPostPage> {
             style: TextUtil.base.NotoSansSC.w500.sp(14).bright(context)),
       ),
     );
+  }
+}
+
+class VoteFormController {
+  final title = TextEditingController();
+  int maxSelect = 1;
+
+  final options = List.generate(1, (index) => TextEditingController());
+
+  submit(BuildContext context, int type, int campus, String tag_id) async {
+    // 取消焦点
+    FocusScope.of(context).requestFocus(FocusNode());
+
+    final title = this.title.text;
+    // 需要去掉最后一个选项
+    final options = this.options.map((e) => e.text).toList();
+    if (options.last.isEmpty) options.removeLast();
+
+    // check valid
+    if (title.isEmpty) {
+      ToastProvider.error('标题不能为空');
+      return;
+    }
+
+    if (options.any((element) => element.isEmpty)) {
+      ToastProvider.error('选项不能为空');
+      return;
+    }
+
+    if (options.length < 2) {
+      ToastProvider.error('至少需要两个选项');
+      return;
+    }
+    // options 检查重复
+    if (options.toSet().length != options.length) {
+      ToastProvider.error('选项不能重复');
+      return;
+    }
+
+    try {
+      await FeedbackService.addVote(
+        type: type,
+        title: title,
+        options: options,
+        campus: campus,
+        tagId: tag_id,
+        maxSelect: maxSelect,
+      );
+      ToastProvider.success('发布成功');
+      Navigator.pop(context);
+    } on DioException catch (e) {
+      ToastProvider.error('发布失败: ${e.error.toString()}');
+    } catch (e) {
+      Logger.reportError(e, StackTrace.current);
+      ToastProvider.error('未知错误: ${e.toString()}');
+    }
+  }
+}
+
+class NewVoteForm extends StatefulWidget {
+  const NewVoteForm({super.key, required this.controller});
+
+  final VoteFormController controller;
+
+  @override
+  State<NewVoteForm> createState() => _NewVoteFormState();
+}
+
+class _NewVoteFormState extends State<NewVoteForm> {
+  @override
+  Widget build(BuildContext context) {
+    final options = widget.controller.options;
+    return Stack(children: [
+      Container(
+        width: double.infinity,
+        margin: EdgeInsets.only(top: 10),
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+            border: Border.all(
+                color: WpyTheme.of(context).get(WpyColorKey.primaryActionColor),
+                width: 2),
+            borderRadius: BorderRadius.circular(8)),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    minLines: 1,
+                    onChanged: (_) => setState(() {}),
+                    maxLines: 2,
+                    maxLength: 100,
+                    controller: widget.controller.title,
+                    decoration: InputDecoration(
+                      counterText: widget.controller.title.text.length > 80
+                          ? '${widget.controller.title.text.length}/100'
+                          : '',
+                      hintText: '请输入投票标题',
+                      hintStyle: TextUtil.base.NotoSansSC.w500
+                          .sp(16)
+                          .infoText(context),
+                      border: InputBorder.none,
+                    ),
+                    style: TextUtil.base.NotoSansSC.w500
+                        .sp(16)
+                        .label(context)
+                        .h(1.4),
+                  ),
+                ),
+                if (widget.controller.options
+                        .where((element) => element.text.isNotEmpty)
+                        .length >
+                    2)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                    decoration: BoxDecoration(
+                        color: WpyTheme.of(context)
+                            .get(WpyColorKey.primaryBackgroundColor),
+                        borderRadius: BorderRadius.circular(16)),
+                    child: Column(
+                      children: [
+                        NumberPicker(
+                            axis: Axis.horizontal,
+                            selectedTextStyle: TextUtil.base.NotoSansSC.w500
+                                .sp(16)
+                                .primaryAction(context),
+                            itemWidth: 20,
+                            itemHeight: 30,
+                            textStyle: TextUtil.base.NotoSansSC.w500
+                                .sp(14)
+                                .label(context)
+                                .h(1.4),
+                            minValue: 1,
+                            maxValue: widget.controller.options
+                                .where((element) => element.text.isNotEmpty)
+                                .length,
+                            value: widget.controller.maxSelect,
+                            onChanged: (v) {
+                              widget.controller.maxSelect = v;
+                              setState(() {});
+                            }),
+                        Text("最多选${widget.controller.maxSelect}项",
+                            style: TextUtil.base.NotoSansSC.w500
+                                .sp(12)
+                                .infoText(context)
+                                .h(1.4)),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            ReorderableListView.builder(
+              shrinkWrap: true,
+              proxyDecorator: (child, index, animation) {
+                return child;
+              },
+              physics: NeverScrollableScrollPhysics(),
+              onReorder: (oldIndex, newIndex) {
+                // Check if the item is being dragged to the last position
+                if (newIndex >= options.length - 1) {
+                  // If dragged to the last position, set it back to its original position
+                  newIndex = oldIndex;
+                } else {
+                  // Adjust the newIndex if it’s moved to another position
+                  if (newIndex > oldIndex) {
+                    newIndex -= 1;
+                  }
+                }
+
+                // Perform the reorder if the newIndex is valid
+                if (oldIndex != newIndex) {
+                  final item = options.removeAt(oldIndex);
+                  options.insert(newIndex, item);
+                  setState(() {});
+                }
+              },
+              itemBuilder: (context, index) {
+                final e = options[index];
+                return GestureDetector(
+                  key: ValueKey(index),
+                  onLongPress: index != options.length - 1
+                      ? null
+                      : () => HapticFeedback.mediumImpact(),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                    child: Row(
+                      children: [
+                        Icon(
+                          e.text.isEmpty
+                              ? Icons.add
+                              : Icons.check_box_outline_blank,
+                          size: 18,
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: e,
+                            minLines: 1,
+                            maxLines: 2,
+                            onChanged: (text) {
+                              if (text.isEmpty && index != options.length - 1) {
+                                options.removeAt(index);
+                                setState(() {});
+                                return;
+                              }
+                              if (index == options.length - 1 &&
+                                  text.isNotEmpty &&
+                                  options.length < 8) {
+                                options.add(TextEditingController());
+                                setState(() {});
+                              }
+                              setState(() {});
+                            },
+                            decoration: InputDecoration(
+                              counterText: e.text.length > 20
+                                  ? '${e.text.length}/50'
+                                  : '',
+                              suffixIcon: options.length > 1 &&
+                                          index != options.length - 1 ||
+                                      index == 7 && options.last.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: Icon(Icons.close),
+                                      onPressed: () {
+                                        if (index == 7) {
+                                          options.removeAt(index);
+                                          options.add(TextEditingController());
+                                          setState(() {});
+                                          return;
+                                        }
+                                        options.removeAt(index);
+                                        widget.controller.maxSelect = min(
+                                            widget.controller.maxSelect,
+                                            options.length - 1);
+                                        setState(() {});
+                                      },
+                                    )
+                                  : null,
+                              hintText: '选项',
+                              hintStyle: TextUtil.base.NotoSansSC.w500
+                                  .sp(14)
+                                  .infoText(context)
+                                  .h(1.4),
+                              border: InputBorder.none,
+                            ),
+                            style: TextUtil.base.NotoSansSC.w500
+                                .sp(14)
+                                .label(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              itemCount: options.length,
+            ),
+          ],
+        ),
+      ),
+      Positioned(
+        left: 24,
+        top: 0,
+        child: Container(
+          height: 20,
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+              color: WpyTheme.of(context).get(WpyColorKey.primaryActionColor),
+              borderRadius: BorderRadius.circular(16)),
+          child: Center(
+            child: Text(
+              'POLL',
+              style: TextUtil.base.w400.NotoSansSC
+                  .sp(10)
+                  .bright(context)
+                  .bold
+                  .h(1.6),
+            ),
+          ),
+        ),
+      ),
+    ]);
   }
 }
 
@@ -392,6 +721,109 @@ class _departmentTagViewState extends State<departmentTagView> {
                 : SearchTagCard(),
           );
         });
+  }
+}
+
+class PostVariantSelector extends StatelessWidget {
+  const PostVariantSelector({super.key});
+
+  options(context) => {
+        PostVariant.Common: {
+          'icon': Icons.chat,
+          'text': '讨论',
+          'color': WpyTheme.of(context).get(WpyColorKey.primaryActionColor)
+        },
+        PostVariant.Vote: {
+          'icon': Icons.poll,
+          'text': '投票',
+          'color': WpyTheme.of(context).get(WpyColorKey.infoStatusColor)
+        },
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: variant,
+      builder: (context, _) {
+        return PopupMenuButton(
+          padding: EdgeInsets.zero,
+          color: WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
+          shape: RacTangle(),
+          offset: Offset(-120.w, 40.w),
+          tooltip: "校区",
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color:
+                      WpyTheme.of(context).get(WpyColorKey.lightBorderColor)),
+              color:
+                  WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Icon(
+                    options(context)[variant.value]?['icon'] as IconData,
+                    color: options(context)[variant.value]?['color'] as Color,
+                    size: 18,
+                  ),
+                ),
+                SizedBox(width: 6),
+                AnimatedSwitcher(
+                  duration: Duration(milliseconds: 300),
+                  // 使用滚动动画
+                  transitionBuilder: (child, animation) {
+                    return ScaleTransition(
+                      scale: animation,
+                      child: child,
+                    );
+                  },
+                  child: Text(
+                      options(context)[variant.value]?['text'] as String,
+                      key: ValueKey(variant.value),
+                      style: TextUtil.base
+                          .sp(16)
+                          .w400
+                          .NotoSansSC
+                          .normal
+                          .infoText(context)),
+                ),
+              ],
+            ),
+          ),
+          onSelected: (PostVariant value) {
+            variant.value = value;
+          },
+          itemBuilder: (context) {
+            return List.from(options(context).keys).map((key) {
+              return PopupMenuItem<PostVariant>(
+                padding: EdgeInsets.only(left: 35), // 去除内边距
+                height: ScreenUtil().setHeight(50), // 设置高度
+                value: key,
+                child: Row(
+                  children: [
+                    Icon(
+                      options(context)[key]?['icon'] as IconData,
+                      color: options(context)[key]?['color'] as Color,
+                      size: 18,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      options(context)[key]?['text'] as String,
+                      style: TextUtil.base.w400.medium.NotoSansSC.sp(14),
+                    ),
+                  ],
+                ),
+              );
+            }).toList();
+          },
+        );
+      },
+    );
   }
 }
 

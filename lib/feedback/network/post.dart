@@ -95,7 +95,8 @@ class Post {
   String eTag;
   String nickname;
 
-  PostVariant variant;
+  PostVariant? variant;
+
   VoteDetail? voteDetail;
 
   bool fromNotify = false; // 是否从通知栏点过来
@@ -107,7 +108,9 @@ class Post {
 
   Post.fromJson(Map<String, dynamic> json)
       : id = json["id"] ?? 0,
-        variant = PostVariant.fromInt(json["variant"]),
+        variant = json["variant"] == null
+            ? null
+            : PostVariant.fromInt(json["variant"]),
         voteDetail = json["vote_detail"] == null || json["variant"] != 1
             ? null
             : VoteDetail.fromJson(json["vote_detail"]),

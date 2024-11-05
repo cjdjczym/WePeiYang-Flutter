@@ -25,6 +25,8 @@ dependencies:
     sdk: flutter
 
   async: ^2.8.2
+  numberpicker: ^2.1.2
+  
   #  amap_location_fluttify: ^0.22.0
 
   pointycastle: ^3.1.1

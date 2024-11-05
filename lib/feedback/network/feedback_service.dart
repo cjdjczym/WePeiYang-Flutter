@@ -1153,4 +1153,30 @@ class FeedbackService with AsyncTimer {
     }
     throw WpyDioException(error: res.data['msg']);
   }
+
+  static Future<void> addVote({
+    required int type,
+    required String title,
+    required List<String> options,
+    required int campus,
+    required String tagId,
+    required int maxSelect,
+  }) async {
+    final formData = FormData.fromMap({
+      'type': type,
+      'title': title,
+      'campus': campus,
+      'tag_id': tagId,
+      'max_selection': maxSelect,
+    });
+    options.forEach((element) {
+      formData.fields.addAll([MapEntry('options', element)]);
+    });
+    final res = await feedbackDio.post('post/vote/new', formData: formData);
+    print("==> d ${res.data}");
+    if (res.data['code'] == 200) {
+      return;
+    }
+    throw WpyDioException(error: res.data['msg']);
+  }
 }

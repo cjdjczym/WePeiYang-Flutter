@@ -54,6 +54,7 @@ final Map<WpyColorKey, Color> darkSchemeDetail = {
   WpyColorKey.dangerousRed: Color(0xFF7E0303),
   WpyColorKey.warningColor: Color(0xFF9B7342),
   WpyColorKey.infoStatusColor: Color(0xffa37636),
+  WpyColorKey.successGreen: Color(0xFF438643),
 
 // bind classes pages
   WpyColorKey.oldActionColor: Color.fromRGBO(155, 166, 212, 1.0),

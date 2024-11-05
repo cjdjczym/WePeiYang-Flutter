@@ -185,6 +185,7 @@ enum WpyColorKey {
   dangerousRed,
   warningColor,
   infoStatusColor,
+  successGreen,
 
 // bind classes pages
   oldActionColor,

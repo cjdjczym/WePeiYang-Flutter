@@ -54,6 +54,7 @@ final Map<WpyColorKey, Color> lightSchemeDetail = {
   WpyColorKey.dangerousRed: Color(0xFFFF0000),
   WpyColorKey.warningColor: Color(0xFFFFBC6B),
   WpyColorKey.infoStatusColor: Color(0xfff0ad4e),
+  WpyColorKey.successGreen: Color(0xFF5CB85C),
 
 // bind classes pages
   WpyColorKey.oldActionColor: Color.fromRGBO(53, 59, 84, 1),
