@@ -17,6 +17,32 @@ enum PostVariant {
   }
 }
 
+class VoteDetail {
+  int id;
+  List<VoteOption> options;
+  int maxSelection;
+  int voteCount;
+
+  VoteDetail({
+    required this.id,
+    required this.options,
+    required this.maxSelection,
+    required this.voteCount,
+  });
+
+  factory VoteDetail.fromJson(Map<String, dynamic> json) {
+    print(json);
+    return VoteDetail(
+      id: json["id"],
+      options: json["options"]
+          .map<VoteOption>((item) => VoteOption.fromJson(item))
+          .toList(),
+      maxSelection: json["max_selection"],
+      voteCount: json["vote_count"],
+    );
+  }
+}
+
 class VoteOption {
   int id;
   int voteId;
@@ -70,7 +96,7 @@ class Post {
   String nickname;
 
   PostVariant variant;
-  List<VoteOption> voteOptions;
+  VoteDetail? voteDetail;
 
   bool fromNotify = false; // 是否从通知栏点过来
 
@@ -82,13 +108,9 @@ class Post {
   Post.fromJson(Map<String, dynamic> json)
       : id = json["id"] ?? 0,
         variant = PostVariant.fromInt(json["variant"]),
-        voteOptions = (() {
-          print("==> ${json['options']}");
-          return json["options"]
-                  ?.map<VoteOption>((item) => VoteOption.fromJson(item))
-                  .toList() ??
-              List<VoteOption>.empty();
-        }()),
+        voteDetail = json["vote_detail"] == null || json["variant"] != 1
+            ? null
+            : VoteDetail.fromJson(json["vote_detail"]),
         createAt = (json["created_at"] == '')
             ? null
             : DateTime.parse(json["created_at"]),
@@ -135,7 +157,7 @@ class Post {
         content = '',
         favCount = 0,
         likeCount = 0,
-        voteOptions = [],
+        voteDetail = null,
         rating = 0,
         tag = null,
         floors = <Floor>[],
@@ -187,7 +209,7 @@ class Post {
         this.id = questionId,
         this.uid = -1,
         this.variant = PostVariant.Common,
-        voteOptions = [],
+        voteDetail = null,
         this.type = -1,
         this.campus = -1,
         this.solved = -1,

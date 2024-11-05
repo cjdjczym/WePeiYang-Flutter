@@ -1141,4 +1141,16 @@ class FeedbackService with AsyncTimer {
       print(e.error);
     }
   }
+
+  static Future<void> updateVote(
+      {required int id, required List<int> options}) async {
+    var res = await feedbackDio.post('post/vote',
+        formData:
+            FormData.fromMap({'vote_id': id, 'selected': options.join(',')}));
+    if (res.data['code'] == 200) {
+      ToastProvider.success('投票成功');
+      return;
+    }
+    throw WpyDioException(error: res.data['msg']);
+  }
 }

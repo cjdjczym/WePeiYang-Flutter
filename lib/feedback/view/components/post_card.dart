@@ -1,11 +1,15 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:we_pei_yang_flutter/commons/environment/config.dart';
 import 'package:we_pei_yang_flutter/commons/util/level_util.dart';
+import 'package:we_pei_yang_flutter/commons/util/logger.dart';
 import 'package:we_pei_yang_flutter/commons/util/text_util.dart';
 import 'package:we_pei_yang_flutter/commons/util/toast_provider.dart';
 import 'package:we_pei_yang_flutter/feedback/feedback_router.dart';
@@ -423,7 +427,7 @@ class _VoteWidgetState extends State<VoteWidget> {
 
   _reloadPost() {
     setState(() {
-      displayPost.voteOptions.forEach((element) {
+      displayPost.voteDetail!.options.forEach((element) {
         element.count = 0;
       });
     });
@@ -442,8 +446,7 @@ class _VoteWidgetState extends State<VoteWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final int totalVoteCount =
-        displayPost.voteOptions.fold(0, (sum, e) => sum + e.count);
+    final int totalVoteCount = displayPost.voteDetail!.voteCount;
     final footerStyle =
         TextUtil.base.w400.NotoSansSC.sp(12).secondaryInfo(context).h(1.6);
     return Stack(
@@ -467,10 +470,20 @@ class _VoteWidgetState extends State<VoteWidget> {
                 style: TextUtil.base.w400.NotoSansSC.sp(16).primary(context),
               ),
               SizedBox(height: 8),
-              if (showResult)
-                _buildResult(totalVoteCount)
-              else
-                _buildSelection(totalVoteCount),
+              AnimatedSize(
+                duration: Duration(milliseconds: 200),
+                alignment: Alignment.topCenter,
+                child: showResult
+                    ? _buildResult(totalVoteCount)
+                    : VoteFormWidget(
+                        post: displayPost,
+                        voteCallback: () {
+                          setState(() {
+                            showResult = true;
+                          });
+                          _reloadPost();
+                        }),
+              ),
               // Footer
               Row(
                 children: [
@@ -528,31 +541,135 @@ class _VoteWidgetState extends State<VoteWidget> {
     );
   }
 
-  Column _buildSelection(int totalVoteCount) {
-    return Column(
-                children: displayPost.voteOptions
-                    .map((e) => InkWell(
-                          onTap: () {},
-                          child: VoteOptionWidget(
-                              option: e,
-                              percent: totalVoteCount == 0
-                                  ? 0
-                                  : e.count / totalVoteCount),
-                        ))
-                    .toList(),
-              );
-  }
-
   Column _buildResult(int totalVoteCount) {
     return Column(
-                children: displayPost.voteOptions
-                    .map((e) => VoteOptionWidget(
-                        option: e,
-                        percent: totalVoteCount == 0
-                            ? 0
-                            : e.count / totalVoteCount))
-                    .toList(),
-              );
+      children: displayPost.voteDetail!.options
+          .map((e) => VoteOptionWidget(
+              option: e,
+              percent: totalVoteCount == 0 ? 0 : e.count / totalVoteCount))
+          .toList(),
+    );
+  }
+}
+
+class VoteFormWidget extends StatefulWidget {
+  final Post post;
+  final void Function() voteCallback;
+
+  const VoteFormWidget(
+      {super.key, required this.post, required this.voteCallback});
+
+  @override
+  State<VoteFormWidget> createState() => _VoteFormWidgetState();
+}
+
+class _VoteFormWidgetState extends State<VoteFormWidget> {
+  late final selectedId = widget.post.voteDetail!.options
+      .where((element) => element.selected)
+      .map((e) => e.id)
+      .toList();
+
+  get enableButton => selectedId.isNotEmpty;
+
+  bool voting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final disableButtonStyle = ButtonStyle(
+        padding: MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 2)),
+        shape: MaterialStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+        backgroundColor: MaterialStateProperty.all(WpyTheme.of(context)
+            .get(WpyColorKey.secondaryInfoTextColor)
+            .withOpacity(0.3)));
+
+    var disableButtonText =
+        TextUtil.base.w400.NotoSansSC.sp(14).secondaryInfo(context).bold.h(1.6);
+    final enableButtonText =
+        TextUtil.base.w400.NotoSansSC.sp(14).bright(context).bold.h(1.6);
+    final enableButtonStyle = ButtonStyle(
+        padding: MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 2)),
+        side: MaterialStateProperty.all(BorderSide(
+            color: WpyTheme.of(context).get(WpyColorKey.primaryActionColor))),
+        shape: MaterialStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+        backgroundColor: MaterialStateProperty.all(
+            WpyTheme.of(context).get(WpyColorKey.primaryActionColor)));
+    return Column(children: [
+      ...widget.post.voteDetail!.options
+          .map((e) => Row(
+                children: [
+                  Transform.scale(
+                    scale: 0.8,
+                    child: Checkbox(
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      value: selectedId.contains(e.id),
+                      onChanged: (_) {
+                        setState(() {
+                          if (selectedId.contains(e.id)) {
+                            selectedId.remove(e.id);
+                          } else {
+                            selectedId.add(e.id);
+                            if (selectedId.length >
+                                widget.post.voteDetail!.maxSelection) {
+                              selectedId.removeAt(0);
+                            }
+                          }
+                        });
+                      },
+                      activeColor: WpyTheme.of(context)
+                          .get(WpyColorKey.primaryActionColor),
+                      side: BorderSide(
+                          color: WpyTheme.of(context)
+                              .get(WpyColorKey.primaryActionColor)),
+                    ),
+                  ),
+                  Text(e.content,
+                      style: TextUtil.base.w400.NotoSansSC
+                          .sp(14)
+                          .primary(context)
+                          .h(1.6)),
+                ],
+              ))
+          .toList(),
+      AnimatedSwitcher(
+        duration: Duration(milliseconds: 200),
+        child: enableButton && !voting
+            ? ElevatedButton(
+                key: ValueKey(1),
+                onPressed: () async {
+                  setState(() {
+                    voting = true;
+                  });
+                  try {
+                    await FeedbackService.updateVote(
+                      id: widget.post.voteDetail!.id,
+                      options: selectedId,
+                    );
+                  } catch (e) {
+                    if (e is DioException)
+                      ToastProvider.error(e.error.toString());
+                    else {
+                      ToastProvider.error("投票失败, 未知错误");
+                      Logger.reportError(e, StackTrace.current);
+                    }
+                  }
+                  setState(() {
+                    voting = false;
+                  });
+                  widget.voteCallback();
+                },
+                child: Text("投票", style: enableButtonText),
+                style: enableButtonStyle,
+              )
+            : ElevatedButton(
+                key: ValueKey(0),
+                onPressed: null,
+                child: Text("投票", style: disableButtonText),
+                style: disableButtonStyle,
+              ),
+      )
+    ]);
   }
 }
 
@@ -562,6 +679,18 @@ class VoteOptionWidget extends StatelessWidget {
 
   const VoteOptionWidget(
       {super.key, required this.option, required this.percent});
+
+  String formatPercent(double percent) {
+    double percentValue = percent * 100;
+    // 检查小数部分的第一位
+    if (percentValue % 1 == 0) {
+      // 如果小数部分为 0，返回整数部分
+      return percentValue.toStringAsFixed(0);
+    } else {
+      // 否则，保留一位小数
+      return percentValue.toStringAsFixed(1);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -576,7 +705,7 @@ class VoteOptionWidget extends StatelessWidget {
             ),
             Spacer(),
             Text(
-              "${option.count.toString()} 票",
+              "${option.count.toString()} 票 (${formatPercent(percent)}%)",
               style:
                   TextUtil.base.w400.NotoSansSC.sp(12).infoText(context).h(1.6),
             ),
