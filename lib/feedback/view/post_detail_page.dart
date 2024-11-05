@@ -89,6 +89,8 @@ class _PostDetailPageState extends State<PostDetailPage>
   void initState() {
     currentRefresher.value = _refreshController;
     super.initState();
+    FeedbackService.visitPost(
+        id: widget.post.id, onFailure: (_) {});
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       /// 如果是从通知栏点进来的
       if (widget.post.fromNotify) {
