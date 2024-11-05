@@ -1,3 +1,46 @@
+enum PostVariant {
+  Common,
+  Vote,
+  Question;
+
+  factory PostVariant.fromInt(int value) {
+    switch (value) {
+      case 0:
+        return PostVariant.Common;
+      case 1:
+        return PostVariant.Vote;
+      case 2:
+        return PostVariant.Question;
+      default:
+        return PostVariant.Common;
+    }
+  }
+}
+
+class VoteOption {
+  int id;
+  int voteId;
+  String content;
+  int count;
+  bool selected;
+
+  VoteOption({
+    required this.id,
+    required this.voteId,
+    required this.content,
+    required this.count,
+    required this.selected,
+  });
+
+  factory VoteOption.fromJson(Map<String, dynamic> json) => VoteOption(
+        id: json["id"],
+        voteId: json["vote_id"],
+        content: json["content"],
+        count: json["count"],
+        selected: json["selected"],
+      );
+}
+
 class Post {
   int id;
   DateTime? createAt;
@@ -26,6 +69,9 @@ class Post {
   String eTag;
   String nickname;
 
+  PostVariant variant;
+  List<VoteOption> voteOptions;
+
   bool fromNotify = false; // 是否从通知栏点过来
 
   bool operator ==(Object other) => other is Post && other.id == id;
@@ -35,6 +81,14 @@ class Post {
 
   Post.fromJson(Map<String, dynamic> json)
       : id = json["id"] ?? 0,
+        variant = PostVariant.fromInt(json["variant"]),
+        voteOptions = (() {
+          print("==> ${json['options']}");
+          return json["options"]
+                  ?.map<VoteOption>((item) => VoteOption.fromJson(item))
+                  .toList() ??
+              List<VoteOption>.empty();
+        }()),
         createAt = (json["created_at"] == '')
             ? null
             : DateTime.parse(json["created_at"]),
@@ -72,6 +126,7 @@ class Post {
   Post.empty()
       : id = 0,
         createAt = null,
+        variant = PostVariant.Common,
         uid = 0,
         type = 0,
         campus = 0,
@@ -80,6 +135,7 @@ class Post {
         content = '',
         favCount = 0,
         likeCount = 0,
+        voteOptions = [],
         rating = 0,
         tag = null,
         floors = <Floor>[],
@@ -130,6 +186,8 @@ class Post {
       : this.fromNotify = true,
         this.id = questionId,
         this.uid = -1,
+        this.variant = PostVariant.Common,
+        voteOptions = [],
         this.type = -1,
         this.campus = -1,
         this.solved = -1,

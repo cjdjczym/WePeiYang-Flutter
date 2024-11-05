@@ -63,6 +63,26 @@ class _PostCardNormalState extends State<PostCardNormal> {
     return typeName[type] ?? '';
   }
 
+  Widget _buildMainContent() {
+    if (widget.post.variant == PostVariant.Vote)
+      return VoteWidget(post: widget.post, interactive: !widget.outer);
+
+    if (widget.outer) {
+      return Text(post.content,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextUtil.base.NotoSansSC.w400.sp(14).primary(context).h(1.4));
+    }
+    return ExpandableText(
+      text: post.content,
+      maxLines: 8,
+      style: TextUtil.base.NotoSansSC.w400.sp(14).primary(context).h(1.6),
+      expand: widget.expandAll,
+      buttonIsShown: true,
+      isHTML: false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     /// 头像昵称时间MP已解决
@@ -133,8 +153,9 @@ class _PostCardNormalState extends State<PostCardNormal> {
                     ])),
           ),
           // Spacer(),
-          if (post.type == 1) SolveOrNotWidget(post.solved),
-          if (post.type != 1)
+          if (post.type == 1)
+            SolveOrNotWidget(post.solved)
+          else
             GestureDetector(
               onLongPress: () {
                 Clipboard.setData(ClipboardData(
@@ -164,151 +185,19 @@ class _PostCardNormalState extends State<PostCardNormal> {
     ]);
 
     /// 帖子内容
-    var content = widget.outer
-        ? Text(post.content,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextUtil.base.NotoSansSC.w400.sp(14).primary(context).h(1.4))
-        : ExpandableText(
-            text: post.content,
-            maxLines: 8,
-            style: TextUtil.base.NotoSansSC.w400.sp(14).primary(context).h(1.6),
-            expand: widget.expandAll,
-            buttonIsShown: true,
-            isHTML: false,
-          );
+    var content = _buildMainContent();
 
     /// 评论点赞点踩浏览量
-    var likeUnlikeVisit = Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SvgPicture.asset("assets/svg_pics/lake_butt_icons/comment.svg",
-              colorFilter: ColorFilter.mode(
-                  WpyTheme.of(context).get(WpyColorKey.infoTextColor),
-                  BlendMode.srcIn),
-              width: 11.67.r),
-          SizedBox(width: 3.r),
-          Text(
-            post.commentCount.toString() + '   ',
-            style:
-                TextUtil.base.ProductSans.primary(context).normal.sp(12).w700,
-          ),
-          IconWidget(
-            IconType.like,
-            size: 15.r,
-            count: post.likeCount,
-            onLikePressed: (isLike, likeCount, success, failure) async {
-              await FeedbackService.postHitLike(
-                id: post.id,
-                isLike: post.isLike,
-                onSuccess: () {
-                  post.isLike = !post.isLike;
-                  post.likeCount = likeCount;
-                  if (post.isLike && post.isDis) {
-                    post.isDis = !post.isDis;
-                    setState(() {});
-                  }
-                  success.call();
-                },
-                onFailure: (e) {
-                  ToastProvider.error(e.error.toString());
-                  failure.call();
-                },
-              );
-            },
-            isLike: post.isLike,
-          ),
-          DislikeWidget(
-            size: 15.r,
-            isDislike: widget.post.isDis,
-            onDislikePressed: (dislikeNotifier) async {
-              await FeedbackService.postHitDislike(
-                id: post.id,
-                isDisliked: post.isDis,
-                onSuccess: () {
-                  post.isDis = !post.isDis;
-                  if (post.isLike && post.isDis) {
-                    post.isLike = !post.isLike;
-                    post.likeCount--;
-                    setState(() {});
-                  }
-                },
-                onFailure: (e) {
-                  ToastProvider.error(e.error.toString());
-                },
-              );
-            },
-          ),
-          Spacer(),
-          Text(
-            post.visitCount.toString() + "次浏览",
-            style: TextUtil.base.ProductSans
-                .secondaryInfo(context)
-                .normal
-                .sp(10)
-                .w400,
-          )
-        ]);
+    var likeUnlikeVisit = _buildActionFooter();
 
     /// tag校区浏览量
-    var tagCampusVisit = Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          if (post.tag != null)
-            TagShowWidget(
-                post.tag!.name,
-                (SplitUtil.sw - SplitUtil.w * 24) / 2 -
-                    (post.campus > 0 ? SplitUtil.w * 100 : SplitUtil.w * 60),
-                post.type,
-                post.tag!.id,
-                0,
-                post.type),
-          if (post.tag != null) SizedBox(width: SplitUtil.w * 8),
-          TagShowWidget(getTypeName(post.type), 100, 0, 0, post.type, 0),
-          if (post.campus != 0)
-            Container(
-              height: 14,
-              width: 14,
-              alignment: Alignment.center,
-              margin: EdgeInsets.fromLTRB(3, 3, 2, 3),
-              padding: EdgeInsets.symmetric(vertical: 2),
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: WpyTheme.of(context).get(WpyColorKey.tagLabelColor)),
-              child: SvgPicture.asset(
-                  "assets/svg_pics/lake_butt_icons/hashtag.svg"),
-            ),
-          if (post.campus != 0) SizedBox(width: SplitUtil.w * 2),
-          if (post.campus != 0)
-            ConstrainedBox(
-              constraints: BoxConstraints(),
-              child: Text(
-                const ['', '卫津路', '北洋园'][post.campus],
-                style:
-                    TextUtil.base.NotoSansSC.w400.sp(14).primaryAction(context),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          SizedBox(width: 8),
-          Spacer(),
-          Text(
-            post.visitCount.toString() + "次浏览",
-            style: TextUtil.base.ProductSans
-                .secondaryInfo(context)
-                .normal
-                .sp(10)
-                .w400,
-          )
-        ]);
+    var tagCampusVisit = _buildTagFooter();
 
     // avatarAndSolve、eTagAndTitle、content的统一list
     // （因为 outer 和 inner 的这部分几乎完全相同）
     List<Widget> head = [
       avatarAndSolve,
-      eTagAndTitle,
+      if (post.variant != PostVariant.Vote) eTagAndTitle,
       if (post.content.isNotEmpty) content,
       // 行数的区别在内部判断
       SizedBox(height: SplitUtil.h * 10)
@@ -381,6 +270,337 @@ class _PostCardNormalState extends State<PostCardNormal> {
     /////////////////////////////////////////////////////////
     ///           ↑ build's return is here  ↑             ///
     /////////////////////////////////////////////////////////
+  }
+
+  Row _buildTagFooter() {
+    return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (post.tag != null)
+            TagShowWidget(
+                post.tag!.name,
+                (SplitUtil.sw - SplitUtil.w * 24) / 2 -
+                    (post.campus > 0 ? SplitUtil.w * 100 : SplitUtil.w * 60),
+                post.type,
+                post.tag!.id,
+                0,
+                post.type),
+          if (post.tag != null) SizedBox(width: SplitUtil.w * 8),
+          TagShowWidget(getTypeName(post.type), 100, 0, 0, post.type, 0),
+          if (post.campus != 0)
+            Container(
+              height: 14,
+              width: 14,
+              alignment: Alignment.center,
+              margin: EdgeInsets.fromLTRB(3, 3, 2, 3),
+              padding: EdgeInsets.symmetric(vertical: 2),
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: WpyTheme.of(context).get(WpyColorKey.tagLabelColor)),
+              child: SvgPicture.asset(
+                  "assets/svg_pics/lake_butt_icons/hashtag.svg"),
+            ),
+          if (post.campus != 0) SizedBox(width: SplitUtil.w * 2),
+          if (post.campus != 0)
+            ConstrainedBox(
+              constraints: BoxConstraints(),
+              child: Text(
+                const ['', '卫津路', '北洋园'][post.campus],
+                style:
+                    TextUtil.base.NotoSansSC.w400.sp(14).primaryAction(context),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          SizedBox(width: 8),
+          Spacer(),
+          Text(
+            post.visitCount.toString() + "次浏览",
+            style: TextUtil.base.ProductSans
+                .secondaryInfo(context)
+                .normal
+                .sp(10)
+                .w400,
+          )
+        ]);
+  }
+
+  Row _buildActionFooter() {
+    return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SvgPicture.asset("assets/svg_pics/lake_butt_icons/comment.svg",
+              colorFilter: ColorFilter.mode(
+                  WpyTheme.of(context).get(WpyColorKey.infoTextColor),
+                  BlendMode.srcIn),
+              width: 11.67.r),
+          SizedBox(width: 3.r),
+          Text(
+            post.commentCount.toString() + '   ',
+            style:
+                TextUtil.base.ProductSans.primary(context).normal.sp(12).w700,
+          ),
+          IconWidget(
+            IconType.like,
+            size: 15.r,
+            count: post.likeCount,
+            onLikePressed: (isLike, likeCount, success, failure) async {
+              await FeedbackService.postHitLike(
+                id: post.id,
+                isLike: post.isLike,
+                onSuccess: () {
+                  post.isLike = !post.isLike;
+                  post.likeCount = likeCount;
+                  if (post.isLike && post.isDis) {
+                    post.isDis = !post.isDis;
+                    setState(() {});
+                  }
+                  success.call();
+                },
+                onFailure: (e) {
+                  ToastProvider.error(e.error.toString());
+                  failure.call();
+                },
+              );
+            },
+            isLike: post.isLike,
+          ),
+          DislikeWidget(
+            size: 15.r,
+            isDislike: widget.post.isDis,
+            onDislikePressed: (dislikeNotifier) async {
+              await FeedbackService.postHitDislike(
+                id: post.id,
+                isDisliked: post.isDis,
+                onSuccess: () {
+                  post.isDis = !post.isDis;
+                  if (post.isLike && post.isDis) {
+                    post.isLike = !post.isLike;
+                    post.likeCount--;
+                    setState(() {});
+                  }
+                },
+                onFailure: (e) {
+                  ToastProvider.error(e.error.toString());
+                },
+              );
+            },
+          ),
+          Spacer(),
+          Text(
+            post.visitCount.toString() + "次浏览",
+            style: TextUtil.base.ProductSans
+                .secondaryInfo(context)
+                .normal
+                .sp(10)
+                .w400,
+          )
+        ]);
+  }
+}
+
+class VoteWidget extends StatefulWidget {
+  final Post post;
+
+  // 是否可交互
+  final bool interactive;
+
+  const VoteWidget({
+    super.key,
+    required this.post,
+    required this.interactive,
+  });
+
+  @override
+  State<VoteWidget> createState() => _VoteWidgetState();
+}
+
+class _VoteWidgetState extends State<VoteWidget> {
+  bool showResult = true;
+  late Post displayPost = widget.post;
+
+  _reloadPost() {
+    setState(() {
+      displayPost.voteOptions.forEach((element) {
+        element.count = 0;
+      });
+    });
+    FeedbackService.getPostById(
+      id: displayPost.id,
+      onFailure: (e) {
+        ToastProvider.error(e.error.toString());
+      },
+      onResult: (Post data) {
+        setState(() {
+          displayPost = data;
+        });
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final int totalVoteCount =
+        displayPost.voteOptions.fold(0, (sum, e) => sum + e.count);
+    final footerStyle =
+        TextUtil.base.w400.NotoSansSC.sp(12).secondaryInfo(context).h(1.6);
+    return Stack(
+      children: [
+        Container(
+          margin: EdgeInsets.only(top: 10),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+              border: Border.all(
+                  color:
+                      WpyTheme.of(context).get(WpyColorKey.primaryActionColor),
+                  width: 2),
+              color:
+                  WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
+              borderRadius: BorderRadius.circular(8)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                displayPost.title,
+                style: TextUtil.base.w400.NotoSansSC.sp(16).primary(context),
+              ),
+              SizedBox(height: 8),
+              if (showResult)
+                _buildResult(totalVoteCount)
+              else
+                _buildSelection(totalVoteCount),
+              // Footer
+              Row(
+                children: [
+                  Text(
+                    "共 $totalVoteCount 票",
+                    style: footerStyle,
+                  ),
+                  if (widget.interactive) ...[
+                    SizedBox(width: 8),
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          showResult = !showResult;
+                        });
+                      },
+                      child: AnimatedSwitcher(
+                        duration: Duration(milliseconds: 200),
+                        child: Text(showResult ? "切换投票" : "切换结果",
+                            key: ValueKey(showResult), style: footerStyle),
+                      ),
+                    ),
+                    Spacer(),
+                    InkWell(
+                      onTap: _reloadPost,
+                      child: Text("Reload", style: footerStyle),
+                    ),
+                  ]
+                ],
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          left: 24,
+          top: 0,
+          child: Container(
+            height: 20,
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+                color: WpyTheme.of(context).get(WpyColorKey.primaryActionColor),
+                borderRadius: BorderRadius.circular(16)),
+            child: Center(
+              child: Text(
+                'POLL',
+                style: TextUtil.base.w400.NotoSansSC
+                    .sp(10)
+                    .bright(context)
+                    .bold
+                    .h(1.6),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _buildSelection(int totalVoteCount) {
+    return Column(
+                children: displayPost.voteOptions
+                    .map((e) => InkWell(
+                          onTap: () {},
+                          child: VoteOptionWidget(
+                              option: e,
+                              percent: totalVoteCount == 0
+                                  ? 0
+                                  : e.count / totalVoteCount),
+                        ))
+                    .toList(),
+              );
+  }
+
+  Column _buildResult(int totalVoteCount) {
+    return Column(
+                children: displayPost.voteOptions
+                    .map((e) => VoteOptionWidget(
+                        option: e,
+                        percent: totalVoteCount == 0
+                            ? 0
+                            : e.count / totalVoteCount))
+                    .toList(),
+              );
+  }
+}
+
+class VoteOptionWidget extends StatelessWidget {
+  final VoteOption option;
+  final double percent;
+
+  const VoteOptionWidget(
+      {super.key, required this.option, required this.percent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Text(
+              option.content,
+              style:
+                  TextUtil.base.w400.NotoSansSC.sp(14).primary(context).h(1.6),
+            ),
+            Spacer(),
+            Text(
+              "${option.count.toString()} 票",
+              style:
+                  TextUtil.base.w400.NotoSansSC.sp(12).infoText(context).h(1.6),
+            ),
+          ],
+        ),
+        SizedBox(width: 8),
+        TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: percent),
+            duration: Duration(milliseconds: 100),
+            builder: (context, value, child) {
+              return LinearProgressIndicator(
+                minHeight: 10,
+                borderRadius: BorderRadius.circular(5),
+                value: value,
+                backgroundColor: WpyTheme.of(context)
+                    .get(WpyColorKey.secondaryInfoTextColor)
+                    .withOpacity(0.5),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    WpyTheme.of(context).get(WpyColorKey.primaryActionColor)),
+              );
+            }),
+        SizedBox(height: 8),
+      ],
+    );
   }
 }
 
