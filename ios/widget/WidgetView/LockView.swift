@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 import WidgetKit
 
-@available(iOSApplicationExtension 16.0, *)
+@available(iOSApplicationExtension 17.0, *)
 struct LockRectView: View {
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject var store = SwiftStorage.courseTable
@@ -46,7 +46,8 @@ struct LockRectView: View {
                     .font(.system(size: 15))
             }
         }
-        //.padding(.leading, 1)
+        .containerBackground(for: .widget) { }
+        .padding(.leading, 1)
         .onAppear {
             store.reloadData()
             courses = WidgetCourseManager.getCourses(courseTable: courseTable)
@@ -56,6 +57,7 @@ struct LockRectView: View {
 
 
 
+@available(iOSApplicationExtension 17.0, *)
 struct LockLineView: View {
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject var store = SwiftStorage.courseTable
@@ -123,6 +125,7 @@ struct LockLineView: View {
             }
             .padding(.top, 15)
         }
+        .containerBackground(for: .widget){ }
         .onAppear {
             (preCourse, nextCourse) = WidgetCourseManager.getPresentAndNextCourse(courseArray: currentCourseTable, weekday: courseTable.currentDay, time: time)
             if preCourse.isNext {
@@ -135,7 +138,7 @@ struct LockLineView: View {
 }
 
 
-@available(iOSApplicationExtension 16.0, *)
+@available(iOSApplicationExtension 17.0, *)
 struct LockRingView: View {
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject var store = SwiftStorage.courseTable
@@ -160,12 +163,84 @@ struct LockRingView: View {
                 Text("暂时没课")
             }
         }
+        .containerBackground(for: .widget) { }
         .onAppear {
             store.reloadData()
             courses = WidgetCourseManager.getCourses(courseTable: courseTable)
         }
     }
 }
+
+
+@available(iOSApplicationExtension 17.0, *)
+struct LockWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(
+            kind: "com.example.lockview",
+            provider: CourseTimelineProvider()
+        ) { entry in
+            LockLineView(entry: DataEntry(date: Date()))
+        }
+        .configurationDisplayName("LockView Widget")
+        .description("This is an example widget.")
+    }
+}
+
+@available(iOSApplicationExtension 17.0, *)
+struct LockWidget_Previews: PreviewProvider {
+    static var previews: some View {
+        LockLineView(entry: DataEntry(date: Date()))
+            .previewContext(WidgetPreviewContext(family: .systemSmall))
+    }
+}
+
+@available(iOSApplicationExtension 17.0, *)
+struct LockRectWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(
+            kind: "com.example.lockview",
+            provider: CourseTimelineProvider()
+        ) { entry in
+            LockRectView(entry: DataEntry(date: Date()))
+        }
+        .configurationDisplayName("LockView Widget")
+        .description("This is an example widget.")
+    }
+}
+
+@available(iOSApplicationExtension 17.0, *)
+struct LockRectWidget_Previews: PreviewProvider {
+    static var previews: some View {
+        LockRectView(entry: DataEntry(date: Date()))
+            .previewContext(WidgetPreviewContext(family: .systemSmall))
+    }
+}
+
+//struct LockRingWidget_Previews: PreviewProvider {
+//    static var previews: some View {
+//        if #available(iOSApplicationExtension 16.0, *) {
+//            LockRingView(entry: DataEntry(date: Date())) .previewContext(WidgetPreviewContext(family: .systemSmall))
+//        } else {
+//            // Fallback on earlier versions
+//        } } }
+//
+//struct LockRingWidget: Widget {
+//    var body: some WidgetConfiguration {
+//        StaticConfiguration(
+//            kind: "com.example.lockringview",
+//            provider: CourseTimelineProvider()
+//        ) { entry in
+//            if #available(iOSApplicationExtension 16.0, *) {
+//                LockRingView(entry: DataEntry(date: Date()))
+//            } else {
+//                // Fallback on earlier versions
+//            }
+//        }
+//        .configurationDisplayName("LockRingView Widget")
+//        .description("This is an example widget.")
+//    }
+//}
+
 
 
 //struct LockRectView_Previews: PreviewProvider {

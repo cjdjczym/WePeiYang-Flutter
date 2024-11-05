@@ -18,7 +18,7 @@ struct PeiYang_LiteBundle: WidgetBundle {
     }
     
     private func widgets() -> some Widget {
-        if #available(iOS 16.0, *) {
+        if #available(iOS 17.0, *) {
             return WidgetBundleBuilder.buildBlock(
                 WhiteColorWidget(),
                 BlueColorWidget(),
@@ -69,7 +69,7 @@ struct BlueColorWidget: Widget {
 }
 
 
-@available(iOSApplicationExtension 16.0, *)
+@available(iOSApplicationExtension 17.0, *)
 struct LockScreenWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "lockScreen", provider: CourseTimelineProvider()) { entry in
@@ -90,7 +90,7 @@ struct CourseTableWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
     
     var body: some View {
-        if #available(iOSApplicationExtension 16.0, *) {
+        if #available(iOSApplicationExtension 17.0, *) {
             switch family {
             case .systemMedium:
                 MediumView(entry: entry, theme: color)
@@ -112,7 +112,7 @@ struct CourseTableWidgetEntryView: View {
     }
 }
 
-@available(iOSApplicationExtension 16.0, *)
+@available(iOSApplicationExtension 17.0, *)
 struct LockScreenWidgetEntryView: View {
     var entry: CourseTimelineProvider.Entry
     
