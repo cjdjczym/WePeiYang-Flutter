@@ -1025,8 +1025,8 @@ class _FloorMessageItemState extends State<FloorMessageItem> {
                     Navigator.pushNamed(
                       context,
                       FeedbackRouter.commentDetail,
-                      arguments: ReplyDetailPageArgs(
-                          subToFloor, widget.data.post.uid, widget.data.type,
+                      arguments: ReplyDetailPageArgs(subToFloor,
+                          widget.data.post.uid, widget.data.type = 0,
                           isMessage: true),
                     ).then((_) {
                       context.read<MessageProvider>().refreshFeedbackCount();
@@ -1041,8 +1041,8 @@ class _FloorMessageItemState extends State<FloorMessageItem> {
                     Navigator.pushNamed(
                       context,
                       FeedbackRouter.commentDetail,
-                      arguments: ReplyDetailPageArgs(
-                          subToFloor, widget.data.post.uid, widget.data.type,
+                      arguments: ReplyDetailPageArgs(subToFloor,
+                          widget.data.post.uid, widget.data.type = 0,
                           isMessage: true),
                     ).then((_) {
                       context.read<MessageProvider>().refreshFeedbackCount();
