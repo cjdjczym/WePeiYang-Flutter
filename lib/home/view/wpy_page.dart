@@ -277,6 +277,7 @@ class WPYPageState extends State<WPYPage> with SingleTickerProviderStateMixin {
 
 class SliverCardsWidget extends StatelessWidget {
   final List<CardBean> cards;
+  final List<int> order;
   final ScrollController controller = ScrollController();
   static List<String> peiyangLabel = [
     '课程表',
@@ -288,7 +289,8 @@ class SliverCardsWidget extends StatelessWidget {
     // '失物招领'
   ];
 
-  SliverCardsWidget(this.cards);
+  SliverCardsWidget(this.cards) :
+    order = CommonPreferences.displayOrder.value.split(',').map((e) => int.parse(e)).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -302,32 +304,33 @@ class SliverCardsWidget extends StatelessWidget {
       clipBehavior: Clip.none,
       itemCount: CommonPreferences.displayedTool.value.length,
       itemBuilder: (context, i) {
+        final cardBean = CommonPreferences.displayedTool.value[order[i]];
         if (!peiyangLabel
-            .contains(CommonPreferences.displayedTool.value[i].label)) {
+            .contains(cardBean.label)) {
           return WButton(
-            key: ValueKey(CommonPreferences.displayedTool.value[i].route),
+            key: ValueKey(cardBean.route),
             onPressed: () async {
               if (await canLaunchUrl(
-                  Uri.parse(CommonPreferences.displayedTool.value[i].route))) {
+                  Uri.parse(cardBean.route))) {
                 await launchUrl(
-                    Uri.parse(CommonPreferences.displayedTool.value[i].route),
+                    Uri.parse(cardBean.route),
                     mode: LaunchMode.externalApplication);
               } else {
                 ToastProvider.error('请检查网络状态');
               }
             },
             child:
-                generateCard(context, CommonPreferences.displayedTool.value[i]),
+                generateCard(context, cardBean),
           );
         } else {
           return WButton(
-            key: ValueKey(CommonPreferences.displayedTool.value[i].route),
+            key: ValueKey(cardBean.route),
             onPressed: () {
               Navigator.pushNamed(
-                  context, CommonPreferences.displayedTool.value[i].route);
+                  context, cardBean.route);
             },
             child:
-                generateCard(context, CommonPreferences.displayedTool.value[i]),
+                generateCard(context, cardBean),
           );
         }
       },
@@ -335,9 +338,11 @@ class SliverCardsWidget extends StatelessWidget {
         if (newIndex > oldIndex) {
           newIndex -= 1;
         }
-        final CardBean item =
-            CommonPreferences.displayedTool.value.removeAt(oldIndex);
-        CommonPreferences.displayedTool.value.insert(newIndex, item);
+        final int movedIndex = order.removeAt(oldIndex);
+        order.insert(newIndex, movedIndex);
+
+        CommonPreferences.displayOrder.value = order.join(',');
+
       },
     );
 

@@ -112,6 +112,7 @@ class CommonPreferences {
   static final autoDarkTheme = PrefsBean<bool>('notFollowSys', true);
 
   /// 首页工具栏的东西
+  static final displayOrder = PrefsBean<String>('displayOrder', "0,1,2,3,4,5");
   static final displayedTool = PrefsBean<List<CardBean>>('displayedTool', [
     CardBean("assets/svg_pics/lake_butt_icons/daily.png", 21.w, '课程表',
         'Schedule', ScheduleRouter.course),
