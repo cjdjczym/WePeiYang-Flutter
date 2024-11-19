@@ -80,21 +80,25 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   @override
   bool get wantKeepAlive => true;
 
-  void listToTop() {
+  void listToTop() async {
     // 页面还没加载完成， 无法滚动到顶部
     if (tabController == null) return;
-
     final controller = LakeUtil.currentController.scrollController;
+    if (!controller.hasClients) return;
 
     // 如果距离太大，直接跳转到1500， 防止动画太夸张
     if (controller.offset > 1500) {
       controller.jumpTo(1500.toDouble());
     }
-    controller.animateTo(
+
+    await controller.animateTo(
       -85.toDouble(),
       duration: Duration(milliseconds: 400),
       curve: Curves.easeOutCirc,
     );
+    Future.delayed(Duration(milliseconds: 400), () {
+      controller.jumpTo(0.toDouble());
+    });
   }
 
   TabController? tabController;
@@ -250,7 +254,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
 
   Widget _buildForumView(List<WPYTab> tabs) {
     return ExtendedTabBarView(
-      cacheExtent: 3,
+      cacheExtent: 0,
       controller: tabController!,
       children: List<Widget>.generate(
         tabs.length,

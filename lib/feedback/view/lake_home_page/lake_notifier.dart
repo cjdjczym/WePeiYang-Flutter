@@ -135,7 +135,11 @@ class LakeUtil {
     }
   }
 
-  static Future<void> initPostList(int index) async {
+  static Future<void> initPostList(int index, {forced = false}) async {
+    if (!forced &&
+        LakeUtil.lakePageControllers[index]?.postHolder.postsList.isNotEmpty) {
+      return;
+    }
     final result = await FeedbackService.getPosts(
         type: '$index',
         searchMode: sortSeq.value,

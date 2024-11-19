@@ -1269,7 +1269,6 @@ class CommentInputFieldState extends State<CommentInputField> {
           FocusManager.instance.primaryFocus?.unfocus();
           context.read<NewFloorProvider>().clearAndClose();
           textEditingController.text = '';
-          currentRefresher.value?.requestRefresh();
           ToastProvider.success("回复成功 (❁´3`❁)");
         },
         onFailure: (e) => ToastProvider.error(

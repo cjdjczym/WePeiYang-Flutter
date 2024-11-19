@@ -111,9 +111,11 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     } catch (e) {
       await _handleRefreshError();
     }
+
     // 如果还没执行就不执行了
     if (task.isActive) task.cancel();
     setState(() {
+      loadFlag++;
       isRefresh = false;
     });
   }
@@ -125,7 +127,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   }
 
   Future<void> _refreshPostList() async {
-    await LakeUtil.initPostList(index)
+    await LakeUtil.initPostList(index, forced: true)
         .catchError((e) => _handlePostListFailure(e));
     pageController.refreshController.refreshCompleted();
   }
@@ -161,6 +163,9 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   }
 
   void listToTop() {
+    setState(() {
+      loadFlag++;
+    });
     final scroll = pageController.scrollController;
 
     if (scroll.offset > 1500) {
@@ -194,6 +199,8 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     LakeUtil.initPostList(index);
   }
 
+  int loadFlag = 0;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -212,7 +219,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
         onPressed: () {
           setState(() {
             LakeUtil.sortSeq.value = 1;
-            listToTop();
+            _onRefresh();
           });
         },
         child: Padding(
@@ -232,7 +239,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
         onPressed: () {
           setState(() {
             LakeUtil.sortSeq.value = 0;
-            listToTop();
+            _onRefresh();
           });
         },
         child: Padding(
@@ -328,6 +335,8 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
                           : ListView.builder(
                               // 根据要求， Listview必须紧挨着SmartRefresher，
                               // 不能包装任何东西
+                              // 所以不得已使用三元表达式
+                              key: PageStorageKey("$index,$loadFlag"),
                               shrinkWrap: true,
                               physics: NeverScrollableScrollPhysics(),
                               // 4是因为前面有4个widget，
