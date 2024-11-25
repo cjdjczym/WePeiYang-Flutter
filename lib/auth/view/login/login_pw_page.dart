@@ -9,6 +9,7 @@ import 'package:we_pei_yang_flutter/commons/util/router_manager.dart';
 import 'package:we_pei_yang_flutter/commons/util/text_util.dart';
 import 'package:we_pei_yang_flutter/commons/util/toast_provider.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/w_button.dart';
+import 'dart:io';
 
 import '../../../commons/themes/wpy_theme.dart';
 
@@ -126,7 +127,7 @@ class _LoginPwWidgetState extends State<LoginPwWidget> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: 50),
+                          SizedBox(height: Platform.isIOS? 20: 50),
                           _usePwLogin ? _pwWidget : _codeWidget,
                           Spacer(),
                           Row(
