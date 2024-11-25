@@ -17,6 +17,7 @@ import 'package:qr_code_tools/qr_code_tools.dart';
 
 import '../../../commons/themes/template/wpy_theme_data.dart';
 import '../../../commons/themes/wpy_theme.dart';
+import 'package:flutter/animation.dart';
 
 class ImageViewPageArgs {
   final List<String> urlList;
@@ -37,14 +38,36 @@ class ImageViewPage extends StatefulWidget {
   _ImageViewPageState createState() => _ImageViewPageState();
 }
 
-class _ImageViewPageState extends State<ImageViewPage> {
+class _ImageViewPageState extends State<ImageViewPage>
+    with SingleTickerProviderStateMixin {
   final String baseUrl = '${EnvConfig.QNHDPIC}download/origin/';
   late int indexNow;
+  bool hasQRCode = false;
+
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     indexNow = widget.args.indexNow;
     super.initState();
+    _checkQRCode();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutBack,
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -96,7 +119,11 @@ class _ImageViewPageState extends State<ImageViewPage> {
                 initialPage: indexNow,
               ),
               onPageChanged: (c) {
-                indexNow = c;
+                setState(() {
+                  indexNow = c;
+                  hasQRCode = false;
+                });
+                _checkQRCode();
               },
             ),
             Align(
@@ -111,7 +138,6 @@ class _ImageViewPageState extends State<ImageViewPage> {
                                 .withOpacity(0.8),
                             borderRadius:
                                 BorderRadius.all(Radius.circular(14.r))),
-                        // 这里设置不一样是因为 返回图标的中心靠右 往左稍微拉一点
                         padding: EdgeInsets.fromLTRB(12.w, 10.w, 14.w, 10.w),
                         child: Icon(
                           Icons.arrow_back_ios_new,
@@ -137,18 +163,27 @@ class _ImageViewPageState extends State<ImageViewPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      WButton(
-                        child: Icon(
-                          Icons.qr_code_scanner_outlined,
-                          color: WpyTheme.of(context)
-                              .get(WpyColorKey.primaryBackgroundColor),
-                          size: 30.h,
-                        ),
-                        onPressed: () {
-                          recognizeQRCode();
-                        },
+                      ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: hasQRCode
+                            ? Row(
+                                children: [
+                                  WButton(
+                                    child: Icon(
+                                      Icons.qr_code_scanner_outlined,
+                                      color: WpyTheme.of(context).get(
+                                          WpyColorKey.primaryBackgroundColor),
+                                      size: 30.h,
+                                    ),
+                                    onPressed: () {
+                                      recognizeQRCode();
+                                    },
+                                  ),
+                                  SizedBox(width: 30.w),
+                                ],
+                              )
+                            : SizedBox.shrink(),
                       ),
-                      SizedBox(width: 30.w),
                       WButton(
                         child: Icon(
                           Icons.file_download_outlined,
@@ -179,6 +214,31 @@ class _ImageViewPageState extends State<ImageViewPage> {
         ),
       ),
     );
+  }
+
+  void _checkQRCode() async {
+    try {
+      final imageUrl = baseUrl + widget.args.urlList[indexNow];
+      final imagePath = await StorageUtil.saveTempFileFromNetwork(imageUrl,
+          filename: widget.args.urlList[indexNow]);
+      String? qrResult = await QrCodeToolsPlugin.decodeFrom(imagePath);
+      if (qrResult != null && qrResult.isNotEmpty) {
+        setState(() {
+          hasQRCode = true;
+        });
+        _animationController.forward();
+      } else {
+        setState(() {
+          hasQRCode = false;
+        });
+        _animationController.reverse();
+      }
+    } catch (e) {
+      setState(() {
+        hasQRCode = false;
+      });
+      _animationController.reverse();
+    }
   }
 
   void saveImage() async {
