@@ -123,6 +123,9 @@ dependencies:
 
   package_info_plus: ^6.0.0
   glass: any
+  qr_code_tools: 
+    git:
+      url: https://github.com/Abobo7/qr_code_tools.git
 #  device_info_plus: ^9.1.2
 
 

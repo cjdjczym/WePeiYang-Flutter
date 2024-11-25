@@ -6,10 +6,14 @@ import 'package:gallery_saver/gallery_saver.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:we_pei_yang_flutter/commons/environment/config.dart';
+import 'package:we_pei_yang_flutter/commons/util/dialog_provider.dart';
 import 'package:we_pei_yang_flutter/commons/util/storage_util.dart';
+import 'package:we_pei_yang_flutter/commons/util/text_util.dart';
 import 'package:we_pei_yang_flutter/commons/util/toast_provider.dart';
 import 'package:we_pei_yang_flutter/commons/widgets/w_button.dart';
+import 'package:qr_code_tools/qr_code_tools.dart';
 
 import '../../../commons/themes/template/wpy_theme_data.dart';
 import '../../../commons/themes/wpy_theme.dart';
@@ -135,6 +139,18 @@ class _ImageViewPageState extends State<ImageViewPage> {
                     children: [
                       WButton(
                         child: Icon(
+                          Icons.qr_code_scanner_outlined,
+                          color: WpyTheme.of(context)
+                              .get(WpyColorKey.primaryBackgroundColor),
+                          size: 30.h,
+                        ),
+                        onPressed: () {
+                          recognizeQRCode();
+                        },
+                      ),
+                      SizedBox(width: 30.w),
+                      WButton(
+                        child: Icon(
                           Icons.file_download_outlined,
                           color: WpyTheme.of(context)
                               .get(WpyColorKey.primaryBackgroundColor),
@@ -178,5 +194,99 @@ class _ImageViewPageState extends State<ImageViewPage> {
         baseUrl + widget.args.urlList[indexNow],
         filename: widget.args.urlList[indexNow]);
     Share.shareXFiles([XFile(path)]);
+  }
+
+  void recognizeQRCode() async {
+    ToastProvider.running('识别中');
+    try {
+      final imageUrl = baseUrl + widget.args.urlList[indexNow];
+      final imagePath = await StorageUtil.saveTempFileFromNetwork(imageUrl,
+          filename: widget.args.urlList[indexNow]);
+      String? qrResult = await QrCodeToolsPlugin.decodeFrom(imagePath);
+      if (qrResult != null && qrResult.isNotEmpty) {
+        if (await canLaunchUrl(Uri.parse(qrResult))) {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return LakeDialogWidget(
+                    title: '天外天工作室提示您',
+                    titleTextStyle: TextUtil.base.normal
+                        .infoText(context)
+                        .NotoSansSC
+                        .sp(22)
+                        .w600,
+                    content: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          ' 你即将离开微北洋，去往：',
+                          style: TextStyle(
+                              color: WpyTheme.of(context)
+                                  .get(WpyColorKey.basicTextColor)),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 6, bottom: 6),
+                          child: Text(qrResult,
+                              style: qrResult.contains('b23.tv') ||
+                                      qrResult.contains('bilibili.com')
+                                  ? TextUtil.base.NotoSansSC
+                                      .biliPink(context)
+                                      .w600
+                                      .h(1.6)
+                                  : TextUtil.base.NotoSansSC
+                                      .link(context)
+                                      .w600
+                                      .h(1.6)),
+                        ),
+                        Text(
+                          ' 请注意您的账号和财产安全\n',
+                          style: TextStyle(
+                              color: WpyTheme.of(context)
+                                  .get(WpyColorKey.basicTextColor)),
+                        ),
+                      ],
+                    ),
+                    cancelText: "取消",
+                    confirmTextStyle: TextUtil.base.normal
+                        .bright(context)
+                        .NotoSansSC
+                        .sp(16)
+                        .w600,
+                    confirmButtonColor: qrResult.contains('b23.tv') ||
+                            qrResult.contains('bilibili.com')
+                        ? WpyTheme.of(context).get(WpyColorKey.biliPink)
+                        : WpyTheme.of(context)
+                            .get(WpyColorKey.primaryTextButtonColor),
+                    cancelTextStyle: TextUtil.base.normal
+                        .label(context)
+                        .NotoSansSC
+                        .sp(16)
+                        .w400,
+                    confirmText: "继续",
+                    cancelFun: () {
+                      Navigator.pop(context);
+                    },
+                    confirmFun: () async {
+                      await launchUrl(Uri.parse(qrResult),
+                          mode: qrResult.contains('b23.tv') ||
+                                  qrResult.contains('bilibili.com')
+                              ? LaunchMode.externalNonBrowserApplication
+                              : LaunchMode.externalApplication);
+                      Navigator.pop(context);
+                    });
+              });
+        } else {
+          ToastProvider.success("识别成功, 已将内容复制到剪贴板");
+          Clipboard.setData(ClipboardData(text: qrResult));
+        }
+      }
+    } catch (e) {
+      if (e.toString().contains('Not found data')) {
+        ToastProvider.error('未检测到二维码');
+      } else {
+        ToastProvider.error('识别失败');
+      }
+    }
   }
 }
