@@ -302,7 +302,7 @@ class SliverCardsWidget extends StatelessWidget {
       padding: EdgeInsets.only(left: 16.h),
       physics: const BouncingScrollPhysics(),
       clipBehavior: Clip.none,
-      itemCount: CommonPreferences.displayedTool.value.length,
+      itemCount: order.length,
       itemBuilder: (context, i) {
         final cardBean = CommonPreferences.displayedTool.value[order[i]];
         if (!peiyangLabel

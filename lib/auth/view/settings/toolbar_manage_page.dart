@@ -65,6 +65,7 @@ class _ToolbarManagePageState extends State<ToolbarManagePage> {
 
   final _scrollController = ScrollController();
   final _gridViewKey = GlobalKey();
+  final List<int> order = CommonPreferences.displayOrder.value.split(',').map((e) => int.parse(e)).toList();
 
   @override
   void initState() {
@@ -214,6 +215,7 @@ class _ToolbarManagePageState extends State<ToolbarManagePage> {
             onPressed: () {
               setState(() {
                 CommonPreferences.displayedTool.value.clear();
+                CommonPreferences.displayOrder.value = "0,1,2,3,4,5";
                 CommonPreferences.displayedTool.value.addAll(peiYangTools);
               });
               ToastProvider.success("已重置！");
@@ -272,25 +274,23 @@ class _ToolbarManagePageState extends State<ToolbarManagePage> {
                       dragChildBoxDecoration: BoxDecoration(),
                       children: [
                         for (int i = 0;
-                            i < CommonPreferences.displayedTool.value.length;
+                            i < order.length;
                             i++)
                           WButton(
-                            key: ValueKey(
-                                CommonPreferences.displayedTool.value[i].route),
+                            key: ValueKey(order[i]),
                             onPressed: () {
                               setState(() {
-                                if (CommonPreferences
-                                        .displayedTool.value.length <=
-                                    2)
+                                if (order.length <= 2)
                                   ToastProvider.error("您保留的太少啦！最少两个哦");
-                                else
-                                  CommonPreferences.displayedTool.value
-                                      .removeAt(i);
+                                else{
+                                  order.removeAt(i);
+                                  CommonPreferences.displayOrder.value = order.join(',');
+                                }
                               });
                             },
                             child: generateSelectCard(
                                 context,
-                                CommonPreferences.displayedTool.value[i],
+                                CommonPreferences.displayedTool.value[order[i]],
                                 true,
                                 true),
                           )
@@ -311,11 +311,9 @@ class _ToolbarManagePageState extends State<ToolbarManagePage> {
                       },
                       onReorder: (List<OrderUpdateEntity> orderUpdateEntities) {
                         for (final orderUpdateEntity in orderUpdateEntities) {
-                          final _displayTool = CommonPreferences
-                              .displayedTool.value
-                              .removeAt(orderUpdateEntity.oldIndex);
-                          CommonPreferences.displayedTool.value
-                              .insert(orderUpdateEntity.newIndex, _displayTool);
+                          final _displayTool = order.removeAt(orderUpdateEntity.oldIndex);
+                          order.insert(orderUpdateEntity.newIndex, _displayTool);
+                          CommonPreferences.displayOrder.value = order.join(',');
                         }
                       },
                     ),
