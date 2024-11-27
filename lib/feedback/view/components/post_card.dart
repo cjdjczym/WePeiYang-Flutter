@@ -32,9 +32,9 @@ class PostCardNormal extends StatefulWidget {
 
   PostCardNormal(this.post,
       {this.outer = true,
-        this.screenshotController,
-        this.expandAll = false,
-        this.avatarClickable = true});
+      this.screenshotController,
+      this.expandAll = false,
+      this.avatarClickable = true});
 
   final bool expandAll;
   final Post post;
@@ -75,13 +75,19 @@ class _PostCardNormalState extends State<PostCardNormal> {
           overflow: TextOverflow.ellipsis,
           style: TextUtil.base.NotoSansSC.w400.sp(14).primary(context).h(1.4));
     }
-    return ExpandableText(
-      text: post.content,
-      maxLines: 8,
-      style: TextUtil.base.NotoSansSC.w400.sp(14).primary(context).h(1.6),
-      expand: widget.expandAll,
-      buttonIsShown: true,
-      isHTML: false,
+    return GestureDetector(
+      onLongPress: () {
+        Clipboard.setData(ClipboardData(text: post.content));
+        ToastProvider.success('复制评论成功');
+      },
+      child: ExpandableText(
+        text: post.content,
+        maxLines: 8,
+        style: TextUtil.base.NotoSansSC.w400.sp(14).primary(context).h(1.6),
+        expand: widget.expandAll,
+        buttonIsShown: true,
+        isHTML: false,
+      ),
     );
   }
 
@@ -126,8 +132,7 @@ class _PostCardNormalState extends State<PostCardNormal> {
                                   SplitUtil.w * 16,
                             ),
                             child: Text(
-                              post.nickname == '' ? '没名字的微友' : post
-                                  .nickname,
+                              post.nickname == '' ? '没名字的微友' : post.nickname,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextUtil.base.w400.NotoSansSC
@@ -137,10 +142,7 @@ class _PostCardNormalState extends State<PostCardNormal> {
                           ),
                           SizedBox(width: SplitUtil.w * 4),
                           LevelUtil(
-                            style: TextUtil.base
-                                .bright(context)
-                                .bold
-                                .sp(7),
+                            style: TextUtil.base.bright(context).bold.sp(7),
                             level: post.level.toString(),
                           ),
                         ],
@@ -165,17 +167,13 @@ class _PostCardNormalState extends State<PostCardNormal> {
             GestureDetector(
               onLongPress: () {
                 Clipboard.setData(ClipboardData(
-                    text: '#MP' + post.id.toString().padLeft(6, '0')))
+                        text: '#MP' + post.id.toString().padLeft(6, '0')))
                     .whenComplete(
-                        () =>
-                        ToastProvider.success('复制帖子id成功，快去分享吧！'));
+                        () => ToastProvider.success('复制帖子id成功，快去分享吧！'));
               },
               child: Text(
                 '#MP' + post.id.toString().padLeft(6, '0'),
-                style: TextUtil.base.w400
-                    .infoText(context)
-                    .NotoSansSC
-                    .sp(12),
+                style: TextUtil.base.w400.infoText(context).NotoSansSC.sp(12),
               ),
             ),
         ]));
@@ -189,10 +187,7 @@ class _PostCardNormalState extends State<PostCardNormal> {
           post.title,
           maxLines: widget.outer ? 1 : 10,
           overflow: TextOverflow.ellipsis,
-          style: TextUtil.base.w400.NotoSansSC
-              .sp(18)
-              .primary(context)
-              .bold,
+          style: TextUtil.base.w400.NotoSansSC.sp(18).primary(context).bold,
         ),
       )
     ]);
@@ -247,9 +242,9 @@ class _PostCardNormalState extends State<PostCardNormal> {
                     //此处为图片
                     Center(
                         child: Padding(
-                          padding: const EdgeInsets.all(2),
-                          child: PostPreviewPic(imgUrls: post.imageUrls),
-                        )),
+                      padding: const EdgeInsets.all(2),
+                      child: PostPreviewPic(imgUrls: post.imageUrls),
+                    )),
                     SizedBox(height: 2),
                     likeUnlikeVisit
                   ],
@@ -321,7 +316,7 @@ class _PostCardNormalState extends State<PostCardNormal> {
               child: Text(
                 const ['', '卫津路', '北洋园'][post.campus],
                 style:
-                TextUtil.base.NotoSansSC.w400.sp(14).primaryAction(context),
+                    TextUtil.base.NotoSansSC.w400.sp(14).primaryAction(context),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -353,11 +348,7 @@ class _PostCardNormalState extends State<PostCardNormal> {
           Text(
             post.commentCount.toString() + '   ',
             style:
-            TextUtil.base.ProductSans
-                .primary(context)
-                .normal
-                .sp(12)
-                .w700,
+                TextUtil.base.ProductSans.primary(context).normal.sp(12).w700,
           ),
           IconWidget(
             IconType.like,
@@ -462,7 +453,7 @@ class _VoteWidgetState extends State<VoteWidget> {
   @override
   Widget build(BuildContext context) {
     final footerStyle =
-    TextUtil.base.w400.NotoSansSC.sp(12).secondaryInfo(context).h(1.6);
+        TextUtil.base.w400.NotoSansSC.sp(12).secondaryInfo(context).h(1.6);
     return Stack(
       children: [
         Container(
@@ -471,10 +462,10 @@ class _VoteWidgetState extends State<VoteWidget> {
           decoration: BoxDecoration(
               border: Border.all(
                   color:
-                  WpyTheme.of(context).get(WpyColorKey.primaryActionColor),
+                      WpyTheme.of(context).get(WpyColorKey.primaryActionColor),
                   width: 2),
               color:
-              WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
+                  WpyTheme.of(context).get(WpyColorKey.primaryBackgroundColor),
               borderRadius: BorderRadius.circular(8)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -491,13 +482,13 @@ class _VoteWidgetState extends State<VoteWidget> {
                   child: showResult
                       ? _buildResult(displayPost.voteDetail!.voteCount)
                       : VoteFormWidget(
-                      post: displayPost,
-                      voteCallback: () {
-                        setState(() {
-                          showResult = true;
-                        });
-                        _reloadPost();
-                      }),
+                          post: displayPost,
+                          voteCallback: () {
+                            setState(() {
+                              showResult = true;
+                            });
+                            _reloadPost();
+                          }),
                 ),
                 // Footer
                 Row(
@@ -566,8 +557,7 @@ class _VoteWidgetState extends State<VoteWidget> {
   Column _buildResult(int totalVoteCount) {
     return Column(
       children: displayPost.voteDetail!.options
-          .map((e) =>
-          VoteOptionWidget(
+          .map((e) => VoteOptionWidget(
               option: e,
               selected: e.selected,
               percent: totalVoteCount == 0 ? 0 : e.count / totalVoteCount))
@@ -608,17 +598,9 @@ class _VoteFormWidgetState extends State<VoteFormWidget> {
             .withOpacity(0.3)));
 
     var disableButtonText =
-    TextUtil.base.w400.NotoSansSC
-        .sp(14)
-        .secondaryInfo(context)
-        .bold
-        .h(1.6);
+        TextUtil.base.w400.NotoSansSC.sp(14).secondaryInfo(context).bold.h(1.6);
     final enableButtonText =
-    TextUtil.base.w400.NotoSansSC
-        .sp(14)
-        .bright(context)
-        .bold
-        .h(1.6);
+        TextUtil.base.w400.NotoSansSC.sp(14).bright(context).bold.h(1.6);
     final enableButtonStyle = ButtonStyle(
         padding: MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 2)),
         side: MaterialStateProperty.all(BorderSide(
@@ -629,78 +611,77 @@ class _VoteFormWidgetState extends State<VoteFormWidget> {
             WpyTheme.of(context).get(WpyColorKey.primaryActionColor)));
     return Column(children: [
       ...widget.post.voteDetail!.options
-          .map((e) =>
-          Row(
-            children: [
-              Transform.scale(
-                scale: 0.8,
-                child: Checkbox(
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  value: selectedId.contains(e.id),
-                  onChanged: (_) {
-                    setState(() {
-                      if (selectedId.contains(e.id)) {
-                        selectedId.remove(e.id);
-                      } else {
-                        selectedId.add(e.id);
-                        if (selectedId.length >
-                            widget.post.voteDetail!.maxSelection) {
-                          selectedId.removeAt(0);
-                        }
-                      }
-                    });
-                  },
-                  activeColor: WpyTheme.of(context)
-                      .get(WpyColorKey.primaryActionColor),
-                  side: BorderSide(
-                      color: WpyTheme.of(context)
-                          .get(WpyColorKey.primaryActionColor)),
-                ),
-              ),
-              Text(e.content,
-                  style: TextUtil.base.w400.NotoSansSC
-                      .sp(14)
-                      .primary(context)
-                      .h(1.6)),
-            ],
-          ))
+          .map((e) => Row(
+                children: [
+                  Transform.scale(
+                    scale: 0.8,
+                    child: Checkbox(
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      value: selectedId.contains(e.id),
+                      onChanged: (_) {
+                        setState(() {
+                          if (selectedId.contains(e.id)) {
+                            selectedId.remove(e.id);
+                          } else {
+                            selectedId.add(e.id);
+                            if (selectedId.length >
+                                widget.post.voteDetail!.maxSelection) {
+                              selectedId.removeAt(0);
+                            }
+                          }
+                        });
+                      },
+                      activeColor: WpyTheme.of(context)
+                          .get(WpyColorKey.primaryActionColor),
+                      side: BorderSide(
+                          color: WpyTheme.of(context)
+                              .get(WpyColorKey.primaryActionColor)),
+                    ),
+                  ),
+                  Text(e.content,
+                      style: TextUtil.base.w400.NotoSansSC
+                          .sp(14)
+                          .primary(context)
+                          .h(1.6)),
+                ],
+              ))
           .toList(),
       AnimatedSwitcher(
         duration: Duration(milliseconds: 200),
         child: enableButton && !voting
             ? ElevatedButton(
-          key: ValueKey(1),
-          onPressed: () async {
-            setState(() {
-              voting = true;
-            });
-            try {
-              await FeedbackService.updateVote(
-                id: widget.post.voteDetail!.id,
-                options: selectedId,
-              );
-            } catch (e) {
-              if (e is DioException)
-                ToastProvider.error(e.error.toString());
-              else {
-                ToastProvider.error("投票失败, 未知错误");
-                Logger.reportError(e, StackTrace.current);
-              }
-            }
-            setState(() {
-              voting = false;
-            });
-            widget.voteCallback();
-          },
-          child: Text("投票", style: enableButtonText),
-          style: enableButtonStyle,
-        )
+                key: ValueKey(1),
+                onPressed: () async {
+                  setState(() {
+                    voting = true;
+                  });
+                  try {
+                    await FeedbackService.updateVote(
+                      id: widget.post.voteDetail!.id,
+                      options: selectedId,
+                    );
+                  } catch (e) {
+                    if (e is DioException)
+                      ToastProvider.error(e.error.toString());
+                    else {
+                      ToastProvider.error("投票失败, 未知错误");
+                      Logger.reportError(e, StackTrace.current);
+                    }
+                  }
+                  setState(() {
+                    voting = false;
+                  });
+                  widget.voteCallback();
+                },
+                child: Text("投票", style: enableButtonText),
+                style: enableButtonStyle,
+              )
             : ElevatedButton(
-          key: ValueKey(0),
-          onPressed: null,
-          child: Text("投票", style: disableButtonText),
-          style: disableButtonStyle,
-        ),
+                key: ValueKey(0),
+                onPressed: null,
+                child: Text("投票", style: disableButtonText),
+                style: disableButtonStyle,
+              ),
       )
     ]);
   }
@@ -711,10 +692,11 @@ class VoteOptionWidget extends StatelessWidget {
   final double percent;
   final bool selected;
 
-  const VoteOptionWidget({super.key,
-    required this.option,
-    required this.percent,
-    required this.selected});
+  const VoteOptionWidget(
+      {super.key,
+      required this.option,
+      required this.percent,
+      required this.selected});
 
   String formatPercent(double percent) {
     double percentValue = percent * 100;
@@ -737,13 +719,13 @@ class VoteOptionWidget extends StatelessWidget {
             Text(
               option.content + (selected ? " (已选)" : ""),
               style:
-              TextUtil.base.w400.NotoSansSC.sp(14).primary(context).h(1.6),
+                  TextUtil.base.w400.NotoSansSC.sp(14).primary(context).h(1.6),
             ),
             Spacer(),
             Text(
               "${option.count.toString()} 票 (${formatPercent(percent)}%)",
               style:
-              TextUtil.base.w400.NotoSansSC.sp(12).infoText(context).h(1.6),
+                  TextUtil.base.w400.NotoSansSC.sp(12).infoText(context).h(1.6),
             ),
           ],
         ),
@@ -761,8 +743,8 @@ class VoteOptionWidget extends StatelessWidget {
                     .withOpacity(0.5),
                 valueColor: AlwaysStoppedAnimation<Color>(WpyTheme.of(context)
                     .get(selected
-                    ? WpyColorKey.successGreen
-                    : WpyColorKey.primaryActionColor)),
+                        ? WpyColorKey.successGreen
+                        : WpyColorKey.primaryActionColor)),
               );
             }),
         SizedBox(height: 8),
