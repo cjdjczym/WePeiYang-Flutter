@@ -125,7 +125,7 @@ class _SettingPageState extends State<SettingPage> {
                   Icon(Icons.widgets_outlined,
                       color: WpyTheme.of(context)
                           .get(WpyColorKey.oldSecondaryActionColor),
-                      size: 20),
+                      size: 20.w),
                   SizedBox(width: 12.w),
                   Expanded(child: Text('应用设置', style: mainTextStyle)),
                   arrow,
@@ -198,7 +198,7 @@ class _SettingPageState extends State<SettingPage> {
                   Icon(Icons.update,
                       color: WpyTheme.of(context)
                           .get(WpyColorKey.oldSecondaryActionColor),
-                      size: 20),
+                      size: 20.w),
                   SizedBox(width: 12.w),
                   Expanded(
                     child: Text('检查更新', style: mainTextStyle),

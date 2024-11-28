@@ -89,8 +89,7 @@ class _PostDetailPageState extends State<PostDetailPage>
   void initState() {
     currentRefresher.value = _refreshController;
     super.initState();
-    FeedbackService.visitPost(
-        id: widget.post.id, onFailure: (_) {});
+    FeedbackService.visitPost(id: widget.post.id, onFailure: (_) {});
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       /// 如果是从通知栏点进来的
       if (widget.post.fromNotify) {
@@ -891,10 +890,10 @@ class _PostDetailPageState extends State<PostDetailPage>
     );
   }
 
-  Column _buildBottomActionBar() {
+  GestureDetector _buildBottomActionBar() {
     final checkButton = WButton(
       onPressed: () {
-        // 点击校务的官方回复时，应当进入official_reply_detail_page而不是在底部弹出输入框，所以这里一定是普通楼层的回复
+        FocusScope.of(context).unfocus(); // 收起键盘
         launchKey.currentState?.send(false);
         setState(() {});
       },
@@ -902,43 +901,52 @@ class _PostDetailPageState extends State<PostDetailPage>
         'assets/svg_pics/lake_butt_icons/send.svg',
         width: SplitUtil.w * 20,
         colorFilter: ColorFilter.mode(
-            WpyTheme.of(context).get(WpyColorKey.basicTextColor),
-            BlendMode.srcIn),
+          WpyTheme.of(context).get(WpyColorKey.basicTextColor),
+          BlendMode.srcIn,
+        ),
       ),
     );
-    return Column(
-      children: [
-        Spacer(),
-        Consumer<NewFloorProvider>(builder: (BuildContext context, value, _) {
-          return AnimatedSize(
-            clipBehavior: Clip.antiAlias,
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeOutSine,
-            child: Container(
-              margin: EdgeInsets.only(top: 4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque, // 确保点击事件被捕获，即使是空白区域
+      onTap: () {
+        // 空白区域点击时，不执行任何操作，防止键盘收起
+      },
+      child: Column(
+        children: [
+          Spacer(),
+          Consumer<NewFloorProvider>(builder: (BuildContext context, value, _) {
+            return AnimatedSize(
+              clipBehavior: Clip.antiAlias,
+              duration: Duration(milliseconds: 300),
+              curve: Curves.easeOutSine,
+              child: Container(
+                margin: EdgeInsets.only(top: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(24.r),
-                    topRight: Radius.circular(24.r)),
-                boxShadow: [
-                  BoxShadow(
+                    topRight: Radius.circular(24.r),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
                       color: WpyTheme.of(context)
                           .get(WpyColorKey.iconAnimationStartColor),
                       offset: Offset(0, 1),
                       blurRadius: 6,
-                      spreadRadius: 0),
-                ],
-                color: WpyTheme.of(context)
-                    .get(WpyColorKey.primaryBackgroundColor),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Offstage(
+                      spreadRadius: 0,
+                    ),
+                  ],
+                  color: WpyTheme.of(context)
+                      .get(WpyColorKey.primaryBackgroundColor),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Offstage(
                                 offstage: !value.inputFieldEnabled,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -950,91 +958,94 @@ class _PostDetailPageState extends State<PostDetailPage>
                                     Row(
                                       children: [
                                         SizedBox(width: SplitUtil.h * 4),
-                                        if (value.images.length == 0)
+                                        if (value.images.isEmpty)
                                           IconButton(
-                                              icon: Image.asset(
-                                                'assets/images/lake_butt_icons/image.png',
-                                                width: SplitUtil.w * 24,
-                                                height: SplitUtil.w * 24,
-                                                color: WpyTheme.of(context).get(
-                                                    WpyColorKey.basicTextColor),
-                                              ),
-                                              onPressed: () => imageSelectionKey
-                                                  .currentState
-                                                  ?.loadAssets()),
-                                        if (value.images.length == 0)
-                                          IconButton(
-                                              icon: Image.asset(
-                                                'assets/images/lake_butt_icons/camera.png',
-                                                width: SplitUtil.w * 24,
-                                                height: SplitUtil.w * 24,
-                                                fit: BoxFit.contain,
-                                                color: WpyTheme.of(context).get(
-                                                    WpyColorKey.basicTextColor),
-                                              ),
-                                              onPressed: () => imageSelectionKey
-                                                  .currentState
-                                                  ?.shotPic()),
-                                        IconButton(
                                             icon: Image.asset(
-                                              'assets/images/lake_butt_icons/paste.png',
+                                              'assets/images/lake_butt_icons/image.png',
                                               width: SplitUtil.w * 24,
                                               height: SplitUtil.w * 24,
-                                              fit: BoxFit.contain,
                                               color: WpyTheme.of(context).get(
                                                   WpyColorKey.basicTextColor),
                                             ),
-                                            onPressed: () => launchKey
+                                            onPressed: () => imageSelectionKey
                                                 .currentState
-                                                ?.getClipboardData()),
-                                        IconButton(
+                                                ?.loadAssets(),
+                                          ),
+                                        if (value.images.isEmpty)
+                                          IconButton(
                                             icon: Image.asset(
-                                              'assets/images/lake_butt_icons/x.png',
+                                              'assets/images/lake_butt_icons/camera.png',
                                               width: SplitUtil.w * 24,
                                               height: SplitUtil.w * 24,
-                                              fit: BoxFit.fitWidth,
                                               color: WpyTheme.of(context).get(
                                                   WpyColorKey.basicTextColor),
                                             ),
-                                            onPressed: () {
-                                              if (launchKey
-                                                  .currentState!
+                                            onPressed: () => imageSelectionKey
+                                                .currentState
+                                                ?.shotPic(),
+                                          ),
+                                        IconButton(
+                                          icon: Image.asset(
+                                            'assets/images/lake_butt_icons/paste.png',
+                                            width: SplitUtil.w * 24,
+                                            height: SplitUtil.w * 24,
+                                            color: WpyTheme.of(context).get(
+                                                WpyColorKey.basicTextColor),
+                                          ),
+                                          onPressed: () => launchKey
+                                              .currentState
+                                              ?.getClipboardData(),
+                                        ),
+                                        IconButton(
+                                          icon: Image.asset(
+                                            'assets/images/lake_butt_icons/x.png',
+                                            width: SplitUtil.w * 24,
+                                            height: SplitUtil.w * 24,
+                                            color: WpyTheme.of(context).get(
+                                                WpyColorKey.basicTextColor),
+                                          ),
+                                          onPressed: () {
+                                            if (launchKey
+                                                .currentState!
+                                                .textEditingController
+                                                .text
+                                                .isNotEmpty) {
+                                              launchKey.currentState!
                                                   .textEditingController
-                                                  .text
-                                                  .isNotEmpty) {
-                                                launchKey.currentState!
-                                                    .textEditingController
-                                                    .clear();
-                                                launchKey.currentState
-                                                    ?.setState(() {
+                                                  .clear();
+                                              launchKey.currentState?.setState(
+                                                () {
                                                   launchKey.currentState
                                                           ?.commentLengthIndicator =
                                                       '清空成功';
-                                                });
-                                              } else {
-                                                value.clearAndClose();
-                                              }
-                                            }),
+                                                },
+                                              );
+                                            } else {
+                                              value.clearAndClose();
+                                            }
+                                          },
+                                        ),
                                         Spacer(),
                                         checkButton,
                                         SizedBox(width: SplitUtil.w * 16),
                                       ],
                                     ),
-                                    SizedBox(height: SplitUtil.h * 10)
+                                    SizedBox(height: SplitUtil.h * 10),
                                   ],
-                                )),
-                            Offstage(
-                              offstage: value.inputFieldEnabled,
-                              child: InkWell(
-                                onTap: () {
-                                  context
-                                      .read<NewFloorProvider>()
-                                      .inputFieldEnabled = true;
-                                  value.inputFieldOpenAndReplyTo(0);
-                                  FocusScope.of(context)
-                                      .requestFocus(value.focusNode);
-                                },
-                                child: Container(
+                                ),
+                              ),
+                              Offstage(
+                                offstage: value.inputFieldEnabled,
+                                child: InkWell(
+                                  onTap: () {
+                                    context
+                                        .read<NewFloorProvider>()
+                                        .inputFieldEnabled = true;
+                                    value.inputFieldOpenAndReplyTo(0);
+                                    FocusScope.of(context)
+                                        .requestFocus(value.focusNode);
+                                  },
+                                  child: Container(
                                     height: SplitUtil.h * 36,
                                     margin: EdgeInsets.fromLTRB(SplitUtil.w * 8,
                                         SplitUtil.h * 13, 0, SplitUtil.h * 13),
@@ -1043,37 +1054,43 @@ class _PostDetailPageState extends State<PostDetailPage>
                                     child: Align(
                                       alignment: Alignment.centerLeft,
                                       child: widget.post.type == 1
-                                          ? Text('校务帖子为实名发言!!!',
+                                          ? Text(
+                                              '校务帖子为实名发言!!!',
                                               style: TextUtil
                                                   .base.NotoSansSC.w500
                                                   .dangerousRed(context)
-                                                  .sp(12))
-                                          : Text('友善回复，真诚沟通',
+                                                  .sp(12),
+                                            )
+                                          : Text(
+                                              '友善回复，真诚沟通',
                                               style: TextUtil
                                                   .base.NotoSansSC.w500
                                                   .secondaryInfo(context)
-                                                  .sp(12)),
+                                                  .sp(12),
+                                            ),
                                     ),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(18.r),
                                       color: WpyTheme.of(context).get(
                                           WpyColorKey.secondaryBackgroundColor),
-                                    )),
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      if (!value.inputFieldEnabled)
-                        BottomLikeFavDislike(widget.post),
-                    ],
-                  ),
-                ],
+                        if (!value.inputFieldEnabled)
+                          BottomLikeFavDislike(widget.post),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        }),
-      ],
+            );
+          }),
+        ],
+      ),
     );
   }
 
