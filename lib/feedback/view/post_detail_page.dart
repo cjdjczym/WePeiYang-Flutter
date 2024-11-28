@@ -893,6 +893,7 @@ class _PostDetailPageState extends State<PostDetailPage>
   GestureDetector _buildBottomActionBar() {
     final checkButton = WButton(
       onPressed: () {
+        // 点击校务的官方回复时，应当进入official_reply_detail_page而不是在底部弹出输入框，所以这里一定是普通楼层的回复
         FocusScope.of(context).unfocus(); // 收起键盘
         launchKey.currentState?.send(false);
         setState(() {});
@@ -908,7 +909,7 @@ class _PostDetailPageState extends State<PostDetailPage>
     );
 
     return GestureDetector(
-      behavior: HitTestBehavior.opaque, // 确保点击事件被捕获，即使是空白区域
+      behavior: HitTestBehavior.deferToChild, // 确保点击事件被捕获，即使是空白区域
       onTap: () {
         // 空白区域点击时，不执行任何操作，防止键盘收起
       },
