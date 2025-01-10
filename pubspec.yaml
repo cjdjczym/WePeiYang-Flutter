@@ -65,7 +65,7 @@ dependencies:
 
   gallery_saver:
     git:
-      url: https://github.com/steven12138/gallery_saver_deps.git
+      url: https://github.com/hxphieno/gallery_saver.git
 
 
   http_parser: ^4.0.2
@@ -99,8 +99,7 @@ dependencies:
   simple_html_css: ^4.0.0
   simple_url_preview_v2:
     git:
-      url: https://github.com/steven12138/flutter-simple-url-preview_deps.git
-      ref: 0a388031be88ea7f89dbc869d89a78ae013a0ca6
+      url: https://github.com/hxphieno/flutter-simple-url-preview_2.git
   flutter_link_previewer: ^3.2.2
 
   table_calendar: ^3.0.9

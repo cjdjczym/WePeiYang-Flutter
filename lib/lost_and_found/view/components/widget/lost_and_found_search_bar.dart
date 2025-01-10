@@ -46,6 +46,7 @@ class _LostAndFoundSearchBarState extends State<LostAndFoundSearchBar>
 
   @override
   Widget build(BuildContext context) {
+
     Widget searchInputField = ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: 30,
