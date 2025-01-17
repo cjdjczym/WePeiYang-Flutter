@@ -221,6 +221,17 @@ class WePeiYangAppState extends State<WePeiYangApp>
       var mediaQueryData = MediaQuery.of(baseContext);
       WePeiYangApp.screenWidth = mediaQueryData.size.width;
       WePeiYangApp.screenHeight = mediaQueryData.size.height;
+      print('aaaaaaaaaaaaaaaaaaaaaaaa');
+      print('aaaaaaaaaaaaaaaaaaaaaaaa');
+      print('aaaaaaaaaaaaaaaaaaaaaaaa');
+      print(mediaQueryData.size.width);
+      print('aaaaaaaaaaaaaaaaaaaaaaaa');
+      print('aaaaaaaaaaaaaaaaaaaaaaaa');
+      print('aaaaaaaaaaaaaaaaaaaaaaaa');
+      // 判断屏幕状态
+      bool isInnerScreen = (mediaQueryData.size.height / mediaQueryData.size.width) < 1.4;
+      TextUtil.updateScreenState(isInnerScreen);
+
       WbyFontLoader.initFonts();
       ToastProvider.init(baseContext);
       TextUtil.init(baseContext);
@@ -232,6 +243,27 @@ class WePeiYangAppState extends State<WePeiYangApp>
         _onBrightnessChanged;
     _listenForShortcutActions();
   }
+
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    var mediaQueryData = MediaQuery.of(context);
+    print('aaaaaaaaaaaaaaaaaaaaaaaa');
+    print('aaaaaaaaaaaaaaaaaaaaaaaa');
+    print('aaaaaaaaaaaaaaaaaaaaaaaa');
+    print(mediaQueryData.size.width);
+    print('aaaaaaaaaaaaaaaaaaaaaaaa');
+    print('aaaaaaaaaaaaaaaaaaaaaaaa');
+    print('aaaaaaaaaaaaaaaaaaaaaaaa');
+
+    // 判断屏幕状态
+    bool isInnerScreen = (mediaQueryData.size.height / mediaQueryData.size.width) < 1.4;
+    // 更新字体状态
+    TextUtil.updateScreenState(isInnerScreen);
+    // 触发重新渲染
+    setState(() {});
+  }
+
 
   void _onBrightnessChanged() async =>
       await Future.delayed(Duration(milliseconds: 400)).then(

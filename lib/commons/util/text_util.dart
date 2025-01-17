@@ -8,12 +8,19 @@ class TextUtil {
   TextUtil._();
 
   static late TextStyle base;
+  static bool isInnerScreen = false; // 标记是否为内屏
 
   static init(BuildContext context) {
     base = Theme.of(context).textTheme.bodyMedium ?? TextStyle();
     base = base.Swis;
   }
+
+  // 更新屏幕状态（可在检测到屏幕变化时调用）
+  static void updateScreenState(bool innerScreen) {
+    isInnerScreen = innerScreen;
+  }
 }
+
 
 extension TextStyleAttr on TextStyle {
   /// 粗细
@@ -173,8 +180,12 @@ extension TextStyleAttr on TextStyle {
   TextStyle get italic => this.copyWith(fontStyle: FontStyle.italic);
 
   /// 以下为非枚举属性
-  TextStyle sp(double s) => this.copyWith(fontSize: s.sp);
-
+  //TextStyle sp(double s) => this.copyWith(fontSize: s.sp-10);
+  TextStyle sp(double s) {
+    // 根据内屏或外屏调整字体大小
+    double adjustedSize = TextUtil.isInnerScreen ? (s.sp - 10) : s.sp;
+    return this.copyWith(fontSize: adjustedSize);
+  }
   TextStyle h(double h) => this.copyWith(height: h);
 
   TextStyle space({double? wordSpacing, double? letterSpacing}) =>
