@@ -715,7 +715,6 @@ class AnnouncementBannerWidget extends StatelessWidget {
                   )
                 : WButton(
                     child: SizedBox(
-                      width: WePeiYangApp.screenWidth - 83,
                       child: Text(
                         '${_getGreetText}, ${CommonPreferences.lakeNickname.value == '无昵称' ? '微友' : CommonPreferences.lakeNickname.value.toString()}',
                         style: TextUtil.base

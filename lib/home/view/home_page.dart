@@ -106,12 +106,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    double width = WePeiYangApp.screenWidth / 3;
+
 
     // 底部切换页面按钮
     var homePage = SizedBox(
       height: 70.h,
-      width: width,
+
       child: AnimatedSwitcher(
         duration: Duration(milliseconds: 300),
         child: IconButton(
@@ -136,7 +136,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     var feedbackPage = SizedBox(
       height: 70.h,
-      width: width,
+
       child: AnimatedSwitcher(
         duration: Duration(milliseconds: 300),
         child: IconButton(
@@ -168,7 +168,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     var selfPage = SizedBox(
       height: 70.h,
-      width: width,
+
       child: AnimatedSwitcher(
         duration: Duration(milliseconds: 300),
         child: IconButton(
@@ -203,8 +203,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         borderRadius: BorderRadius.only(
             topLeft: Radius.circular(18.0), topRight: Radius.circular(18.0)),
       ),
-      child: SafeArea(
-        child: Row(children: <Widget>[homePage, feedbackPage, selfPage]),
+      child: Container(
+        width: MediaQuery.of(context).size.width,
+        child: SafeArea(
+
+          child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[homePage, feedbackPage, selfPage]),
+        ),
       ),
     );
 
