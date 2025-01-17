@@ -240,13 +240,9 @@ class WePeiYangAppState extends State<WePeiYangApp>
       var mediaQueryData = MediaQuery.of(baseContext);
       WePeiYangApp.screenWidth = mediaQueryData.size.width;
       WePeiYangApp.screenHeight = mediaQueryData.size.height;
-      print('aaaaaaaaaaaaaaaaaaaaaaaa');
-      print('aaaaaaaaaaaaaaaaaaaaaaaa');
-      print('aaaaaaaaaaaaaaaaaaaaaaaa');
+
       print(mediaQueryData.size.width);
-      print('aaaaaaaaaaaaaaaaaaaaaaaa');
-      print('aaaaaaaaaaaaaaaaaaaaaaaa');
-      print('aaaaaaaaaaaaaaaaaaaaaaaa');
+
       // 判断屏幕状态
       bool isInnerScreen = (mediaQueryData.size.height / mediaQueryData.size.width) < 1.4;
       TextUtil.updateScreenState(isInnerScreen);
