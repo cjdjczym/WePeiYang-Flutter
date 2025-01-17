@@ -74,7 +74,7 @@ class _TjuBindPageState extends State<TjuBindPage> {
         SizedBox(height: 60),
         SizedBox(
           height: 50,
-          width: 120,
+          width: 130,
           child: ElevatedButton(
             onPressed: () => showDialog(
                     context: context,

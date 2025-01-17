@@ -203,6 +203,25 @@ class WePeiYangApp extends StatefulWidget {
   WePeiYangAppState createState() => WePeiYangAppState();
 }
 
+//适配不同的屏幕宽度
+class ScreenWidthNotifier extends ChangeNotifier {
+  double _screenWidth = 0.0;
+
+  double get screenWidth => _screenWidth;
+
+  void updateWidth(double width) {
+    if (_screenWidth != width) {
+      _screenWidth = width;
+      notifyListeners();  // 通知依赖此值的 widget 更新
+    }
+  }
+}
+
+// 使用全局变量或类来存储屏幕宽度
+class GlobalScreenWidth {
+  static double screenWidth = 0;
+}
+
 class WePeiYangAppState extends State<WePeiYangApp>
     with WidgetsBindingObserver {
   @override
@@ -248,13 +267,8 @@ class WePeiYangAppState extends State<WePeiYangApp>
   void didChangeMetrics() {
     super.didChangeMetrics();
     var mediaQueryData = MediaQuery.of(context);
-    print('aaaaaaaaaaaaaaaaaaaaaaaa');
-    print('aaaaaaaaaaaaaaaaaaaaaaaa');
-    print('aaaaaaaaaaaaaaaaaaaaaaaa');
+
     print(mediaQueryData.size.width);
-    print('aaaaaaaaaaaaaaaaaaaaaaaa');
-    print('aaaaaaaaaaaaaaaaaaaaaaaa');
-    print('aaaaaaaaaaaaaaaaaaaaaaaa');
 
     // 判断屏幕状态
     bool isInnerScreen = (mediaQueryData.size.height / mediaQueryData.size.width) < 1.4;
@@ -374,11 +388,17 @@ class WePeiYangAppState extends State<WePeiYangApp>
             return messageProvider;
           },
         ),
+        ChangeNotifierProvider(
+          create: (_) => ScreenWidthNotifier(),
+        ),
       ],
       child: Builder(builder: (context) {
         // 获取友盟在线参数
         context.read<RemoteConfig>().getRemoteConfig();
-
+        // 在根组件中更新屏幕宽度
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          GlobalScreenWidth.screenWidth = MediaQuery.of(context).size.width;
+        });
         return ListenableBuilder(
             listenable: globalTheme,
             builder: (context, _) {
@@ -591,3 +611,4 @@ class _StartUpWidgetState extends State<StartUpWidget> {
     }
   }
 }
+
