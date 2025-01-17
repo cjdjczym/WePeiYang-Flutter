@@ -50,7 +50,7 @@ jobs:
     - name: Build APK
       run: |
         flutter build apk --release \
-        --dart-define=ENVIRONMENT=PREVIEW \
+        --dart-define=ENVIRONMENT=DEVELOP \
         --dart-define=VERSION=$BUILD_VERSION \
         --dart-define=VERSIONCODE=$VERSION_CODE \
         --target-platform android-arm,android-arm64 \
