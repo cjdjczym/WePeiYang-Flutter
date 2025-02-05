@@ -33,6 +33,9 @@ class _CollectionPageState extends State<CollectionPage> {
   bool tap = false;
   int currentPage = 1;
 
+  TextEditingController _searchController = TextEditingController();
+  String _searchKeyword = "";
+
   _getMyCollects({Function(List<Post>)? onSuccess, Function? onFail}) {
     FeedbackService.getFavoritePosts(
         page: currentPage,
@@ -65,7 +68,7 @@ class _CollectionPageState extends State<CollectionPage> {
     });
   }
 
-//下拉加载
+  //下拉加载
   _onLoading() {
     currentPage++;
     _getMyCollects(onSuccess: (list) {
@@ -109,47 +112,98 @@ class _CollectionPageState extends State<CollectionPage> {
   }
 
   @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    _refreshController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     ///拆出去单写会刷新错误..
     ///收藏List栏，为空时显示无
-    var favLists = (ListView.builder(
+    final filteredFavList = _searchKeyword.trim().isEmpty
+        ? _favList
+        : _favList
+            .where((post) =>
+                post.title.toLowerCase().contains(_searchKeyword.toLowerCase()))
+            .toList();
+
+    var favLists = ListView.builder(
       padding: EdgeInsets.zero,
       physics: NeverScrollableScrollPhysics(),
       shrinkWrap: true,
+      itemCount: filteredFavList.length,
       itemBuilder: (context, index) {
-        Widget fav = PostCardNormal(
-          _favList[index],
-        );
-        return fav;
+        return PostCardNormal(filteredFavList[index]);
       },
-      itemCount: _favList.length,
-    ));
+    );
+
     var list = ExpandablePageView(
       controller: _tabController,
       children: [
         AnimatedSwitcher(
           duration: Duration(milliseconds: 300),
           child: Builder(
-              key: ValueKey(_favList.length.isZero),
-              builder: (context) {
-                if (_favList.length.isZero) {
-                  return Container(
-                      height: 200,
-                      alignment: Alignment.center,
-                      child: Text("暂无收藏",
-                          style: TextUtil.base.oldThirdAction(context)));
-                } else {
-                  return Column(
-                    children: [favLists, SizedBox(height: 20.w)],
-                  );
-                }
-              }),
+            key: ValueKey(filteredFavList.length),
+            builder: (context) {
+              if (filteredFavList.isEmpty) {
+                return Container(
+                    height: 200,
+                    alignment: Alignment.center,
+                    child: Text(_searchKeyword.isEmpty ? "暂无收藏" : "没有匹配的收藏",
+                        style: TextUtil.base.oldThirdAction(context)));
+              } else {
+                return Column(
+                  children: [favLists, SizedBox(height: 20.w)],
+                );
+              }
+            },
+          ),
         )
       ],
     );
 
     Widget body = CustomScrollView(
       slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.w),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: WpyTheme.of(context)
+                    .get(WpyColorKey.primaryBackgroundColor),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.w),
+                hintText: "搜索收藏帖子",
+                prefixIcon: Icon(Icons.search),
+                suffixIcon: _searchKeyword.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _searchKeyword = "";
+                          });
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.w),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchKeyword = value;
+                });
+              },
+            ),
+          ),
+        ),
         SliverToBoxAdapter(
           child: Container(
               color: WpyTheme.of(context)
@@ -225,7 +279,7 @@ class _ExpandablePageViewState extends State<ExpandablePageView>
   void initState() {
     _heights = widget.children.map((e) => 0.0).toList();
     super.initState();
-    _pageController = widget.controller //
+    _pageController = widget.controller
       ..addListener(() {
         final _newPage = _pageController.page!.round();
         if (_currentPage != _newPage) {
@@ -255,12 +309,11 @@ class _ExpandablePageViewState extends State<ExpandablePageView>
   }
 
   List<Widget> get _sizeReportingChildren => widget.children
-      .asMap() //
+      .asMap()
       .map(
         (index, child) => MapEntry(
           index,
           OverflowBox(
-            //needed, so that parent won't impose its constraints on the children, thus skewing the measurement results.
             minHeight: 0,
             maxHeight: double.infinity,
             alignment: Alignment.topCenter,
